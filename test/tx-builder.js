@@ -1747,7 +1747,7 @@ describe('TxBuilder', function () {
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
     })
-
+/*
     it('should sign and verify with one output if change is less than dust with dropping change with converting to/from JSON', function () {
       this.timeout(10000)
       const nIns = 3
@@ -1796,7 +1796,7 @@ describe('TxBuilder', function () {
       // total sending: nOuts * 0.999e8
 
       txb.build({ useAllInputs: true })
-
+      console.log(tx.toJSON())
       txb.tx.txIns.length.should.equal(nIns)
       txb.tx.txOuts.length.should.equal(nOuts)
 
@@ -1868,7 +1868,7 @@ describe('TxBuilder', function () {
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
     })
-
+*/
     it('should sign and verify a large number of inputs and outputs, with very small amounts for inputs (1000 satoshis, 0.01 sat/byte fee), with converting to/from JSON', function () {
       this.timeout(10000)
       const nIns = 100
