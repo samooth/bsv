@@ -1,9 +1,9 @@
 {
   "name": "bsv",
   "description": "Javascript library for Bitcoin SV (BSV).",
-  "version": "2.0.10",
-  "author": "Yours Inc.",
-  "homepage": "https://github.com/moneybutton/bsv",
+  "version": "2.0.11",
+  "author": "Tomás Díaz",
+  "homepage": "https://github.com/samooth/bsv",
   "source": "entry.js",
   "main": "dist/bsv.cjs.js",
   "module": "dist/bsv.module.js",
@@ -22,6 +22,9 @@
     "doc": "documentation build entry.js -f html -o doc"
   },
   "contributors": [
+    {
+      "name": "Yours Inc.",
+    },
     {
       "name": "Daniel Cousens",
       "email": "bitcoin@dcousens.com"
