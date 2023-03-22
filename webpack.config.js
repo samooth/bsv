@@ -15,7 +15,9 @@ module.exports = [
       }
     },
     resolve: {
-    	fallback: { 'process/browser': require.resolve('process/browser'), },
+    	fallback: { 'process/browser': require.resolve('process/browser'),
+      'buffer': require.resolve('buffer'),
+         },
       alias: {
         process: 'process/browser'
       }
@@ -23,7 +25,7 @@ module.exports = [
     plugins: [
       new webpack.ProvidePlugin({
         process: 'process/browser',
-        //Buffer: ['buffer', 'Buffer']
+        Buffer: ['buffer', 'Buffer']
       })
     ],
     devtool: 'source-map',
@@ -37,6 +39,14 @@ module.exports = [
       filename: 'bsv.module.js',
       library: {
         type: 'commonjs-module'
+      }
+    },
+    resolve: {
+      fallback: { 'process/browser': require.resolve('process/browser'),
+      'buffer': require.resolve('buffer'),
+         },
+      alias: {
+        process: 'process/browser'
       }
     },
     devtool: 'source-map',
