@@ -1,6 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
-// const pkg = require('package.json')
+ const pkg = require('package.json')
 
 module.exports = [
   {
@@ -15,6 +15,7 @@ module.exports = [
       }
     },
     resolve: {
+    	fallback: { 'process/browser': require.resolve('process/browser'), },
       alias: {
         process: 'process/browser'
       }
