@@ -16,7 +16,7 @@ module.exports = [
     },
     resolve: {
     	fallback: { 'process/browser': require.resolve('process/browser'),
-      'buffer': require.resolve('buffer'),
+      'Buffer': require.resolve('buffer'),
          },
       alias: {
         process: 'process/browser'
@@ -43,7 +43,7 @@ module.exports = [
     },
     resolve: {
       fallback: { 'process/browser': require.resolve('process/browser'),
-      'buffer': require.resolve('buffer'),
+      'Buffer': require.resolve('buffer'),
          },
       alias: {
         process: 'process/browser'
