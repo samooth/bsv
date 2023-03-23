@@ -15,9 +15,6 @@ module.exports = [
       }
     },
     resolve: {
-    	fallback: { 'process/browser': require.resolve('process/browser'),
-      'Buffer': require.resolve('buffer'),
-         },
       alias: {
         process: 'process/browser'
       }
@@ -39,14 +36,6 @@ module.exports = [
       filename: 'bsv.module.js',
       library: {
         type: 'commonjs-module'
-      }
-    },
-    resolve: {
-      fallback: { 'process/browser': require.resolve('process/browser'),
-      'Buffer': require.resolve('buffer'),
-         },
-      alias: {
-        process: 'process/browser'
       }
     },
     devtool: 'source-map',

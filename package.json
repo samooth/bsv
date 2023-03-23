@@ -85,7 +85,7 @@
     "url": "https://github.com/moneybutton/bsv.git"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "aes": "0.1.0",
