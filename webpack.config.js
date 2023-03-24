@@ -22,7 +22,7 @@ module.exports = [
     plugins: [
       new webpack.ProvidePlugin({
         process: 'process/browser',
-        Buffer: ['buffer', 'Buffer']
+        Buffer: [require.resolve("buffer/"), "Buffer"],
       })
     ],
     devtool: 'source-map',
