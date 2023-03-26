@@ -1,6 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
- const pkg = require('./package.json')
+const pkg = require('./package.json')
 
 module.exports = [
   {
@@ -10,11 +10,14 @@ module.exports = [
       path: path.resolve(__dirname, 'dist'),
       filename: 'bsv.bundle.js',
       library: {
-        name: 'bsvjs',
+        name: 'bsv',
         type: 'umd2'
       }
     },
     resolve: {
+      fallback:{
+          buffer: require.resolve('buffer/'),
+      },
       alias: {
         process: 'process/browser'
       }

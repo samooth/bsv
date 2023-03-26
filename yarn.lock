@@ -5895,7 +5895,7 @@
   "resolved" "https://registry.npmjs.org/web-namespaces/-/web-namespaces-2.0.1.tgz"
   "version" "2.0.1"
 
-"webpack-cli@^4.10.0", "webpack-cli@4.x.x":
+"webpack-cli@^4.7.0", "webpack-cli@4.x.x":
   "integrity" "sha512-NLhDfH/h4O6UOy+0LSso42xvYypClINuMNBVVzX4vX98TmTaTUxwRbXdhucbFMd2qLaCTcLq/PdYrvi8onw90w=="
   "resolved" "https://registry.npmjs.org/webpack-cli/-/webpack-cli-4.10.0.tgz"
   "version" "4.10.0"
@@ -5933,7 +5933,7 @@
   "resolved" "https://registry.npmjs.org/webpack-sources/-/webpack-sources-3.2.3.tgz"
   "version" "3.2.3"
 
-"webpack@^5.0.0", "webpack@^5.1.0", "webpack@^5.74.0", "webpack@>=2", "webpack@4.x.x || 5.x.x":
+"webpack@^5.0.0", "webpack@^5.1.0", "webpack@^5.37.1", "webpack@>=2", "webpack@4.x.x || 5.x.x":
   "integrity" "sha512-Th05ggRm23rVzEOlX8y67NkYCHa9nTNcwHPBhdg+lKG+mtiW7XgggjAeeLnADAe7mLjJ6LUNfgHAuRRh+Z6J7w=="
   "resolved" "https://registry.npmjs.org/webpack/-/webpack-5.76.2.tgz"
   "version" "5.76.2"
