@@ -1,14 +1,14 @@
 {
   "name": "bsv",
   "description": "Javascript library for Bitcoin SV (BSV).",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "author": "Tomás Díaz",
   "homepage": "https://github.com/samooth/bsv",
   "source": "entry.js",
   "main": "dist/bsv.cjs.js",
   "module": "dist/bsv.module.js",
   "unpkg": "dist/bsv.bundle.js",
-  "library": "bsvjs",
+  "library": "bsv",
   "scripts": {
     "clean": "rm -rf node_modules/* yarn.lock",
     "lint": "standard *.js lib/**/*.js bin/**/*.js test/**/*.js",
@@ -22,6 +22,10 @@
     "doc": "documentation build entry.js -f html -o doc"
   },
   "contributors": [
+    {
+      "name": "Tomás Díaz",
+      "email": "tomas@bsv.direct"
+    },
     {
       "name": "Yours Inc."
     },
@@ -89,6 +93,7 @@
   },
   "dependencies": {
     "aes": "0.1.0",
+    "bigint-buffer": "^1.1.5",
     "bitcoin-elliptic": "^7.0.1",
     "bn.js": "^5.2.1",
     "bs58": "5.0.0",
