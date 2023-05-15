@@ -1,7 +1,7 @@
 {
   "name": "bsv",
   "description": "Javascript library for Bitcoin SV (BSV).",
-  "version": "2.0.12",
+  "version": "2.0.13",
   "author": "Tomás Díaz",
   "homepage": "https://github.com/samooth/bsv",
   "source": "entry.js",
@@ -12,13 +12,13 @@
   "scripts": {
     "clean": "rm -rf node_modules/* yarn.lock",
     "lint": "standard *.js lib/**/*.js bin/**/*.js test/**/*.js",
-    "pretest": "yarn run lint",
+    "pretest": "npx yarn run lint",
     "test:mocha": "mocha",
     "test:karma": "karma start --single-run",
-    "test": "yarn run test:mocha && yarn run test:karma",
+    "test": "npx yarn run test:mocha && npx yarn run test:karma",
     "build": "webpack",
-    "prepublish": "yarn build",
-    "prepack": "yarn build",
+    "prepublish": "npx yarn build",
+    "prepack": "npx yarn build",
     "doc": "documentation build entry.js -f html -o doc"
   },
   "contributors": [
