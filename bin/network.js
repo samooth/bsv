@@ -83,7 +83,8 @@ const client = net.createConnection({ port: 8333, host: '192.168.0.105' }, () =>
   client.write(msgBuf)
 })
 
-client.on('data', data => {
+ 
+client.on('data', (data) => {
   console.log('got data')
 })
 

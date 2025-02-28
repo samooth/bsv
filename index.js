@@ -14,9 +14,6 @@
  * const Address = require('bsv/lib/address').
  */
 'use strict'
-if (!global._babelPolyfill) {
-  require('babel-polyfill')
-}
 require('./lib/config')
 
 const bsv = module.exports
@@ -98,5 +95,4 @@ Object.keys(bsv).forEach(function (key) {
 bsv.Mainnet = Mainnet
 bsv.Testnet = Testnet
 
-bsv.browser = process.browser
-bsv.env = process.env
+bsv.env = import.meta.env

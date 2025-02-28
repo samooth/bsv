@@ -13,10 +13,9 @@ import bs58 from 'bs58'
 import elliptic from 'bitcoin-elliptic'
 import hashjs from 'hash.js'
 import pbkdf2 from 'pbkdf2'
-import { Buffer } from 'buffer';
+import { Buffer } from 'buffer'
 
-// version string.
-import pkgInfo from './package.json'
+import pkgInfo from './package.json' with { type: 'json' }
 
 // Dependencies, subject to change.
 const deps = {
