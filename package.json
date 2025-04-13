@@ -1,21 +1,27 @@
 {
   "name": "bsv2",
   "description": "Javascript library for Bitcoin SV (BSV).",
-  "version": "2.0.24",
+  "version": "2.1.1",
   "author": "Tomás Díaz",
   "homepage": "https://github.com/samooth/bsv",
   "source": "entry.js",
-  "type": "module",
-  "main": "dist/bsv2.umd.js",
-  "module": "dist/bsv2.mjs",
-  "unpkg": "dist/bsv2.umd.js",
+  "main": "./dist/bsv2.umd.cjs",
+  "module": "./dist/bsv2.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/bsv2.mjs",
+      "require": "./dist/bsv2.umd.cjs"
+    }
+  },
+  "files":["./dist/bsv2.mjs","./dist/bsv2.umd.cjs"],
+  "unpkg": "./dist/bsv2.umd.js",
   "library": "bsv2",
   "scripts": {
     "clean": "rm -rf node_modules/* yarn.lock",
     "lint": "npx eslint *.js lib/**/*.js bin/**/*.js test/**/*.js",
     "pretest": "npx yarn run lint",
-    "test:mocha": "npx mocha --require esm",
-    "test:karma": "npx karma start --single-run",
+    "test:mocha": "mocha esm",
+    "test:karma": "karma start --single-run",
     "test": "npx yarn run test:mocha && npx yarn run test:karma",
     "build": "npx vite build",
     "prepublish": "npx yarn build",
@@ -96,16 +102,18 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "aes": "0.1.0",
-    "bigint-buffer": "^1.1.5",
+    "aes": "^0.1.0",
     "bitcoin-elliptic": "^7.0.1",
     "bn.js": "^5.2.1",
     "bs58": "6.0.0",
     "buffer": "^6.0.3",
     "hash.js": "^1.1.7",
     "is-hexadecimal": "^2.0.1",
+    "karma": "^6.4.4",
     "pbkdf2": "3.1.2",
-    "randombytes": "^2.1.0"
+    "randombytes": "^2.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "@babel/core": "^7.26.9",
@@ -117,8 +125,11 @@
     "esm": "^3.2.25",
     "globals": "^16.0.0",
     "husky": "^9.1.7",
+    "mocha": "^11.1.0",
     "vite": "^6.2.0",
-    "vite-plugin-node-polyfills": "^0.23.0"
+    "vite-plugin-node-polyfills": "^0.23.0",
+    "webpack": "^5.99.5",
+    "webpack-cli": "^6.0.1"
   },
   "license": "MIT",
   "standard": {

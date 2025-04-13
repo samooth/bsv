@@ -16,7 +16,8 @@ export default defineConfig({
       include: [],
       // To exclude specific polyfills, add them to this list. Note: if include is provided, this has no effect
       exclude: [
-        'http' // Excludes the polyfill for `http` and `node:http`.
+        'http', // Excludes the polyfill for `http` and `node:http`.
+        'vm'
       ],
       globals: {
         Buffer: true, // can also be 'build', 'dev', or false
