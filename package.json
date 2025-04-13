@@ -5,15 +5,15 @@
   "author": "Tomás Díaz",
   "homepage": "https://github.com/samooth/bsv",
   "source": "entry.js",
-  "main": "./dist/bsv2.umd.cjs",
+  "main": "./dist/bsv2.umd.js",
   "module": "./dist/bsv2.mjs",
   "exports": {
     ".": {
       "import": "./dist/bsv2.mjs",
-      "require": "./dist/bsv2.umd.cjs"
+      "require": "./dist/bsv2.umd.js"
     }
   },
-  "files":["./dist/bsv2.mjs","./dist/bsv2.umd.cjs"],
+  "files":["./dist/bsv2.mjs","./dist/bsv2.umd.js"],
   "unpkg": "./dist/bsv2.umd.js",
   "library": "bsv2",
   "scripts": {
