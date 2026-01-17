@@ -11,29 +11,15 @@ export default defineConfig({
     lib: {
       name: 'bsv2',
       entry: resolve(__dirname, 'entry.js'),
-      formats: ['es', 'umd']
-    }
+      formats: ['es', 'umd'],
+        fileName: (format) => `bsv2.${format === 'es' ? 'mjs' : 'umd.js'}`
+      }
   },
   plugins: [
     nodePolyfills({
-      // To add only specific polyfills, add them here. If no option is passed, adds all polyfills
-      include: [],
-      // To exclude specific polyfills, add them to this list. Note: if include is provided, this has no effect
-      exclude: [
-        'http', // Excludes the polyfill for `http` and `node:http`.
-        'vm'
-      ],
-      globals: {
-        Buffer: true, // can also be 'build', 'dev', or false
-        global: true,
-        process: true
-      },
-      // Override the default polyfills for specific modules.
-      overrides: {
-        // Since `fs` is not supported in browsers, we can use the `memfs` package to polyfill it.
-        // fs: 'memfs',
-      },
-      // Whether to polyfill `node:` protocol imports.
+      include: ['buffer', 'global'],
+      exclude: ['http', 'vm', 'process', 'fs', 'path'],
+      globals: { Buffer: true, global: true },
       protocolImports: true
     })
   ]

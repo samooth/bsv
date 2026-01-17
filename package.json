@@ -1,7 +1,7 @@
 {
   "name": "bsv2",
   "description": "Javascript library for Bitcoin SV (BSV).",
-  "version": "2.1.2",
+  "version": "2.1.4",
   "author": "Tomás Díaz",
   "homepage": "https://github.com/samooth/bsv",
   "source": "entry.js",
@@ -110,7 +110,7 @@
     "buffer": "^6.0.3",
     "hash.js": "^1.1.7",
     "is-hexadecimal": "^2.0.1",
-    "pbkdf2": "3.1.2",
+    "pbkdf2": "^3.1.5",
     "randombytes": "^2.1.0"
   },
   "devDependencies": {
