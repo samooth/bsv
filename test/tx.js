@@ -455,7 +455,7 @@ describe('Tx', function () {
 
         // sighash ought to be correct
         tx
-          .sighash(nHashType, nIn, subScript)
+          .sighash(nHashType, nIn, subScript, new Bn(0), 0)
           .toString('hex')
           .should.equal(sighashBuf.toString('hex'))
       })
