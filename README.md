@@ -223,8 +223,12 @@ yarn doc                    # regenerate API documentation
 ```
 
 The suite has over 8,500 tests, including reference vectors from bitcoind,
-Bitcoin ABC and Bitcoin SV, plus dedicated tests for the pre-Genesis and
-Chronicle policies. `yarn test` starts Vitest in watch mode.
+Bitcoin ABC and Bitcoin SV, dedicated pre-Genesis and Chronicle tests, and
+deterministic property tests for script, `Bn` and transaction round-trips.
+`yarn test` starts Vitest in watch mode.
+
+Scripts with truncated pushdata are parsed leniently and rejected during
+execution; the pre-Genesis reference vectors rely on that behaviour.
 
 Commits and release tags are GPG-signed, and `commit.gpgsign` is enabled for
 future commits. Releases are published to npm and GitHub Releases with the same
