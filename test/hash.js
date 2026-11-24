@@ -117,7 +117,6 @@ describe('Hash', function () {
     })
 
     it('should compute a hash for 5mb data', async function () {
-      this.timeout(10000)
       const data = Buffer.alloc(5e6)
       data.fill(0)
       const hash1 = Hash.sha256(data)

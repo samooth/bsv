@@ -1,4 +1,4 @@
-/* global after */
+import { afterAll } from 'vitest'
 /**
  * Global "before" and "after" to run before and after all tests. These can be
  * used to establish and also tear down global database connections, network
@@ -8,6 +8,6 @@
 'use strict'
 import { Workers } from '../lib/workers'
 
-after(function () {
+afterAll(function () {
   Workers.endGlobalWorkers()
 })

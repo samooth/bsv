@@ -585,7 +585,7 @@ describe('Bn', function () {
           .fromScriptNumBuffer(Buffer.from('8100000000', 'hex'))
           .toNumber()
           .should.equal(-1)
-      }.should.throw('script number overflow'))
+      }.should.throw('script number overflow nMaxNumSize: 4'))
     })
 
     it('should throw an error for number that is not a minimal size representation', function () {

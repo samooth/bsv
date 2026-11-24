@@ -179,7 +179,6 @@ describe('Block', function () {
     })
 
     it('should return the correct hash of block containing the largest tx', async function () {
-      this.timeout(10000)
       let block = new Block().fromHex(largesttxblockvector.blockhex)
       const buf = block.toBuffer()
       block = block.fromBuffer(buf)

@@ -1,35 +1,45 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
-  test: {
-    include: ['test/*.js'],
-    browser: {
-      enabled: true,
-      name: 'chromium',
-      provider: 'playwright'
-    }
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      process: 'process/browser',
+      string_decoder: 'string_decoder',
+    },
+    dedupe: ['bn.js'],
+  },
+  define: {
+    'process.env': {},
   },
   build: {
     lib: {
-      name: 'bsv2',
       entry: resolve(__dirname, 'entry.js'),
-      formats: ['es', 'umd'],
-        fileName: (format) => `bsv2.${format === 'es' ? 'mjs' : 'umd.js'}`
+      name: 'bsv2',
+      fileName: (format) => {
+        if (format === 'es') return 'bsv2.mjs';
+        if (format === 'cjs') return 'bsv2.cjs';
+        return `bsv2.${format}.js`;
       },
-      target: ['es2018', 'chrome87', 'firefox78', 'safari14'],
-      sourcemap: true,
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          pure_funcs: ['console.log', 'console.info']
-        },
-        mangle: {
-          reserved: ['Buffer', 'require', 'define']
-        }
-      }
+      formats: ['cjs', 'es', 'umd'],
+    },
+    rollupOptions: {
+      output: {
+        // standalone bundle for UMD
+      },
+    },
+    minify: 'esbuild',
+    sourcemap: true,
   },
-  plugins: [
-
-  ]
-})
+  test: {
+    globals: true,
+    environment: 'node',
+    testTimeout: 30000,
+    include: ['test/**/*.js'],
+    exclude: ['test/data/**', 'test/vectors/**', 'test/vitest.setup.js', 'test/global.js'],
+    setupFiles: ['./test/vitest.setup.js'],
+  },
+});

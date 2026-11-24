@@ -17,7 +17,6 @@ describe('Workers', function () {
   })
 
   it('should handle a bunch of things at the same time', async function () {
-    this.timeout(6000)
     const n = 100
     const str = Bip32.fromString(
       'xprv9s21ZrQH143K2SX7qL4vxLnbDHtupmfrkv96s1N3eeqKa4LnS5ZNMzhiSQWqL1fmkeF1rF7ndtvDoYH4sKJLMMpaJup21c7C3kyAg8DfbPQ'
@@ -31,7 +30,6 @@ describe('Workers', function () {
   })
 
   it('should handle several big things at the same time', async function () {
-    this.timeout(10000)
     const messageBuf = Buffer.from('0'.repeat(10000))
     const fromKeyPair = KeyPair.fromRandom()
     const toKeyPair = KeyPair.fromRandom()

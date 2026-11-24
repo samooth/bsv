@@ -540,7 +540,7 @@ describe('TxBuilder', function () {
   describe('#getSig', function () {
     let txb, keyPair1, txOut1
 
-    before(function () {
+    beforeAll(function () {
       const obj = prepareAndBuildTxBuilder()
       txb = obj.txb
       keyPair1 = obj.keyPair1
@@ -642,7 +642,7 @@ describe('TxBuilder', function () {
   describe('#asyncGetSig', function () {
     let txb, keyPair1, txOut1
 
-    before(function () {
+    beforeAll(function () {
       const obj = prepareAndBuildTxBuilder()
       txb = obj.txb
       keyPair1 = obj.keyPair1
@@ -1299,7 +1299,6 @@ describe('TxBuilder', function () {
     })
 
     it('should sign and verify a really large number of inputs and outputs', function () {
-      this.timeout(10000)
       const nIns = 100
       const nOuts = 100
 
@@ -1363,10 +1362,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 50
       const nOuts = 50
 
@@ -1433,10 +1431,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with incrementing amounts, with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 50
       const nOuts = 30
 
@@ -1503,10 +1500,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with the same key, with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 50
       const nOuts = 30
 
@@ -1563,10 +1559,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with BIP 69 sorting, with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 50
       const nOuts = 30
 
@@ -1624,10 +1619,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with BIP 69 sorting with incrementing amounts, with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 50
       const nOuts = 30
 
@@ -1685,10 +1679,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with BIP 69 sorting with decrementing amounts, with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 50
       const nOuts = 30
 
@@ -1746,10 +1739,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 /*
     it('should sign and verify with one output if change is less than dust with dropping change with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 3
       const nOuts = 1
 
@@ -1807,10 +1799,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with very small amounts for inputs (1000 satoshis), with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 100
       const nOuts = 1
 
@@ -1867,10 +1858,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 */
     it('should sign and verify a large number of inputs and outputs, with very small amounts for inputs (1000 satoshis, 0.01 sat/byte fee), with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 100
       const nOuts = 1
 
@@ -1927,10 +1917,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with very small amounts for inputs (1499 satoshis, 0.01 sat/byte fee), with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 100
       const nOuts = 1
 
@@ -1987,10 +1976,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should sign and verify a large number of inputs and outputs, with very small amounts for inputs (1499 satoshis, 0.5 sat/byte fee), with converting to/from JSON', function () {
-      this.timeout(10000)
       const nIns = 100
       const nOuts = 1
 
@@ -2047,10 +2035,9 @@ describe('TxBuilder', function () {
       txb.signWithKeyPairs(keyPairs)
 
       TxVerifier.verify(txb.tx, txb.uTxOutMap).should.equal(true)
-    })
+    }, 10000)
 
     it('should not mess up with bip 69 sorting with this known txbuilder object', function () {
-      this.timeout(10000)
       const txbJSON = '{"tx":"0100000005b27d77a351245f3ed2c38e40114d432ffecee69d8c64dc06fe427a1ac09f1b40000000006b483045022100f7831904c76f49e23bdd5d2813cd708074ec77d345a0311ee7150fcfcd494cf3022058cbce7ea22b8d759c35d37a375ce0c73b9e1e87d047cb7748ade1fd082370d1412102bf0925d874daedbc1e0abdffa399b2b2042fddbba1cca850cdfdfc3ec9f218ffffffffff98f1664e4ad769225b39033b5a7269afdff54cc676908724d74d4efdebc2ee59000000006b483045022100f2e3195d6c104aacbf04589916d3e529414abbc8379b7d92fa6d32c32c297f05022024775901b5d71cb639297cf9b757d97738b16715023320ef9a51311bb1a97e94412102cd925e193fe4e0848e1f99e0975904a73eea7f779ff0e870115ad16b784803ceffffffff011ac299dce0415097d1fd67287e83cb92fbd2b9b7efe2c91751eb454e05c394000000006a4730440220739794fc726b205a34569c590d32e13459f5127fcf71d2169fc5944a727de8be0220505d2cbedc63514a6147fe756d45f7faf9bd5852df446fa35b62b554fb2d32514121034828cbbf04f9ae5608fdcf47598e191846b4970c1b6eda66519661ca75035a9dffffffffe85c87e34ed16ab8988fc398c16b9738f6032e9a4377b6636e2ec6a0ee752fcb000000006a473044022030e01c5bda4da0d4aadec98c5ece7b3529509b0aef6f437a14417abaf833956002207d8ece580800807132bca535ce06398ac5c68c68acd20566ecd3db0ecd58d7114121033fb03af6776d59cdb6ae78dff502d36b5a51429f243116f827e3d7438343b213ffffffff19cc6850ec0e9b8a01ef6ea0ef9888fbdc0e6794b9a6b7c7c36621d80665a0ec000000006b4830450221009f25a7e50bc857eb75f6dd06b55ec495a3f11c73f1f0151190bbb417f051978b02207169bb7aaa05d58dcc50f091d9b0a584157420cc2e4c3d841cafddf891356a95412103582a67dd32baefe4063e0408809bc740df4233c44dc2e5e3737de5c2249f0863ffffffff028d160000000000001976a914821972770205b3466023acd90790f95aee37914488accc580300000000001976a9145ff56ab8054c9e038254ee92f9ba364f84c2736188ac00000000","txIns":["98f1664e4ad769225b39033b5a7269afdff54cc676908724d74d4efdebc2ee5900000000020000ffffffff","011ac299dce0415097d1fd67287e83cb92fbd2b9b7efe2c91751eb454e05c39400000000020000ffffffff","b27d77a351245f3ed2c38e40114d432ffecee69d8c64dc06fe427a1ac09f1b4000000000020000ffffffff","e85c87e34ed16ab8988fc398c16b9738f6032e9a4377b6636e2ec6a0ee752fcb00000000020000ffffffff","19cc6850ec0e9b8a01ef6ea0ef9888fbdc0e6794b9a6b7c7c36621d80665a0ec00000000020000ffffffff"],"txOuts":["cc580300000000001976a9145ff56ab8054c9e038254ee92f9ba364f84c2736188ac"],"uTxOutMap":{"98f1664e4ad769225b39033b5a7269afdff54cc676908724d74d4efdebc2ee59:0":"f9140000000000001976a9145629fb19a3c46420707f61785c1b63cc69b7da3288ac","011ac299dce0415097d1fd67287e83cb92fbd2b9b7efe2c91751eb454e05c394:0":"1ad70000000000001976a91462698da42f87021fc8cdb4c945d09d93e82480a088ac","b27d77a351245f3ed2c38e40114d432ffecee69d8c64dc06fe427a1ac09f1b40:0":"acd60000000000001976a9144c6daa9f0afa439dc98075c531e1fb614139818e88ac","e85c87e34ed16ab8988fc398c16b9738f6032e9a4377b6636e2ec6a0ee752fcb:0":"1ad70000000000001976a914841067d1f0abdd78ef8feb3aa42b52c0d7ee83a188ac","19cc6850ec0e9b8a01ef6ea0ef9888fbdc0e6794b9a6b7c7c36621d80665a0ec:0":"1ad70000000000001976a914d3647137576bc3561444a2c84018c942796ab5bb88ac"},"sigOperations":{"98f1664e4ad769225b39033b5a7269afdff54cc676908724d74d4efdebc2ee59:0":[{"nScriptChunk":0,"type":"sig","addressStr":"18rbQNxxgYdpMnsvNjvbXJP1TBZ9zQM3WJ","nHashType":65,"log":"successfully inserted signature"},{"nScriptChunk":1,"type":"pubKey","addressStr":"18rbQNxxgYdpMnsvNjvbXJP1TBZ9zQM3WJ","nHashType":65,"log":"successfully inserted public key"}],"011ac299dce0415097d1fd67287e83cb92fbd2b9b7efe2c91751eb454e05c394:0":[{"nScriptChunk":0,"type":"sig","addressStr":"19yMfmgJAEsGHUS4J6ZXqtv3Z4hG3NT4pA","nHashType":65,"log":"successfully inserted signature"},{"nScriptChunk":1,"type":"pubKey","addressStr":"19yMfmgJAEsGHUS4J6ZXqtv3Z4hG3NT4pA","nHashType":65,"log":"successfully inserted public key"}],"b27d77a351245f3ed2c38e40114d432ffecee69d8c64dc06fe427a1ac09f1b40:0":[{"nScriptChunk":0,"type":"sig","addressStr":"17y7jLk1f1oQcV78pRsnv7dUNBLnFUzakZ","nHashType":65,"log":"successfully inserted signature"},{"nScriptChunk":1,"type":"pubKey","addressStr":"17y7jLk1f1oQcV78pRsnv7dUNBLnFUzakZ","nHashType":65,"log":"successfully inserted public key"}],"e85c87e34ed16ab8988fc398c16b9738f6032e9a4377b6636e2ec6a0ee752fcb:0":[{"nScriptChunk":0,"type":"sig","addressStr":"1D3HrCYVc1fybgtY4e8Yhg1k1KF7X9C725","nHashType":65,"log":"successfully inserted signature"},{"nScriptChunk":1,"type":"pubKey","addressStr":"1D3HrCYVc1fybgtY4e8Yhg1k1KF7X9C725","nHashType":65,"log":"successfully inserted public key"}],"19cc6850ec0e9b8a01ef6ea0ef9888fbdc0e6794b9a6b7c7c36621d80665a0ec:0":[{"nScriptChunk":0,"type":"sig","addressStr":"1LGjuKv9eqPUzg2YsMdfzJWckuAwfcnmZo","nHashType":65,"log":"successfully inserted signature"},{"nScriptChunk":1,"type":"pubKey","addressStr":"1LGjuKv9eqPUzg2YsMdfzJWckuAwfcnmZo","nHashType":65,"log":"successfully inserted public key"}]},"changeScript":"76a914821972770205b3466023acd90790f95aee37914488ac","changeAmountBn":5773,"feeAmountBn":410,"feePerKbNum":500,"sigsPerInput":1,"dust":546,"dustChangeToFees":true,"hashCache":{"prevoutsHashBuf":"1d67bdef4b743591ada4922b5af092d7cce85efcf8f630e94afcde068f6fa2d0","sequenceHashBuf":"99399659a6e129b6497faa061be7d8f6558a8594b5dd80474859a12d6ccf0b20","outputsHashBuf":"bcda35b250afaa69c8ffe37021ebece36afbe749c1935f69de3eab93e450fd3d"}}'
       const txb = TxBuilder.fromJSON(JSON.parse(txbJSON))
 
@@ -2099,6 +2086,6 @@ describe('TxBuilder', function () {
       // })
 
       txVerifier2.verify().should.equal(true)
-    })
+    }, 10000)
   })
 })

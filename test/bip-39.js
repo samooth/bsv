@@ -11,8 +11,7 @@ import vectors from './vectors/bip39.json'
 import { wordList as enWordList } from '../lib/bip-39-en-wordlist'
 import { wordList as jpWordList } from '../lib/bip-39-jp-wordlist'
 
-describe('Bip39', function () {
-  this.timeout(5000)
+describe('Bip39', { timeout: 5000 }, function () {
 
   it('should initialize the class', function () {
     should.exist(Bip39)

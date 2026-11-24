@@ -3,8 +3,7 @@
 import { Ach } from '../lib/ach'
 import should from 'should'
 
-describe('Ach (Aes+Cbc+Hmac)', function () {
-  this.timeout(4000)
+describe('Ach (Aes+Cbc+Hmac)', { timeout: 4000 }, function () {
 
   it('should exist', function () {
     should.exist(Ach)
