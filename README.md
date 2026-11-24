@@ -1,53 +1,226 @@
-# bsv
+# bsv2
 
-bsv is a javascript library for Bitcoin SV (BSV) intended to satisfy certain
-goals:
+[![npm version](https://img.shields.io/npm/v/bsv2.svg)](https://www.npmjs.com/package/bsv2)
+[![license](https://img.shields.io/npm/l/bsv2.svg)](./LICENSE)
+[![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
 
-1. Support ease-of-use by being internally consistent. It should not be
-   necessary to read the source code of a class or function to know how to use it.
-   Once you know how to use part of the library, the other parts should feel
-   natural.
+A JavaScript library for Bitcoin SV (BSV). `bsv2` is the maintained continuation
+of the `bsv` 2.x codebase: same class-based API, published on npm as
+[`bsv2`](https://www.npmjs.com/package/bsv2) and developed at
+[github.com/samooth/bsv](https://github.com/samooth/bsv).
 
-2. Have 100% test coverage, or nearly so, so that the library is known to be
-   reliable. This should include running standard test vectors from the reference
-   implementation.
+## Features
 
-3. Library objects have an interface suitable for use with a command-line
-   interface or other libraries and tools, in particular having toString,
-   fromString, toJSON, fromJSON, toBuffer, fromBuffer, toHex, fromHex methods.
+- Transactions and scripts with BSV `SIGHASH_FORKID` semantics.
+- A script interpreter with the standard verification flags, plus an opt-in
+  pre-Genesis policy mode.
+- Keys, addresses, BIP32 hierarchical deterministic wallets and BIP39 mnemonics
+  (English, Spanish and Japanese wordlists).
+- Block and block-header serialization, plus mining utilities.
+- ECIES and AES encryption helpers.
+- Web Worker support for cryptography-heavy operations.
+- Dependency-light, auditable source under `lib/`.
+- Ships as ESM, CommonJS and UMD bundles with sourcemaps.
 
-4. All standard features of the blockchain are implemented (or will be) and
-   saved in lib/. All BIPs are correctly implemented and, where appropriate, saved
-   as bip-xx.js in lib/ (since that is their standard name). In order to allow
-   rapid development, Yours Bitcoin includes non-standard and experimental
-   features. Any non-standard features (such as colored coins or stealth
-   addresses) are labeled as such in index.js as well as in comments.
+## Install
 
-5. Expose everything, including dependencies. This makes it possible to develop
-   apps that require fine-grained control over the basics, such as big numbers and
-   points. However, it also means that you can hurt yourself if you misuse these
-   primitives.
-
-6. Use standard javascript conventions wherever possible so that other
-   developers find the code easy to understand.
-
-7. Minimize the use of dependencies so that all code can be easily audited.
-
-8. All instance methods modify the state of the object and return the object,
-   unless there is a good reason to do something different. To access the result
-   of an instance method, you must access the object property(s) that it modifies.
-
-9. Support web workers to unblock web wallet UIs when performing cryptography.
-
-## Environment Variables
-
-* `BSV_JS_BASE_URL` - Default "/".
-* `BSV_JS_BUNDLE_FILE` - Default "bsv.js"
-* `BSV_JS_WORKER_FILE` - Default "bsv-worker.js"
-* `NETWORK` - Default "mainnet"
-
-You can change the network to run the CLI in testnet mode:
-
+```bash
+npm install bsv2
 ```
-NETWORK=testnet ./bin/bsv.js
+
+Node.js 18 or newer is required.
+
+```js
+// ESM (package.json "type": "module", or a .mjs file)
+import { Bn, Tx, Script, KeyPair } from 'bsv2'
+
+// CommonJS
+const { Bn, Tx, Script, KeyPair } = require('bsv2')
 ```
+
+For the browser, use the UMD bundle from a CDN (it exposes the global `bsv2`):
+
+```html
+<script src="https://unpkg.com/bsv2/dist/bsv2.umd.js"></script>
+<script>
+  const { Bn, Tx } = bsv2
+</script>
+```
+
+| Bundle | Use |
+| --- | --- |
+| `dist/bsv2.mjs` | ESM (`import`), browsers and modern bundlers |
+| `dist/bsv2.cjs` | CommonJS (`require`) |
+| `dist/bsv2.umd.js` | `<script>` tag / UMD (global `bsv2`) |
+
+Each bundle has a sibling `.map` file. The package version is also exported as
+`version`, and selected third-party dependencies as `deps`.
+
+## Quick start
+
+### Keys and addresses
+
+```js
+import { Address, KeyPair } from 'bsv2'
+
+const keyPair = new KeyPair().fromRandom()
+const address = Address.fromPubKey(keyPair.pubKey)
+
+console.log(address.toString()) // 1...
+```
+
+### Mnemonic and HD wallet
+
+```js
+import { Address, Bip32, Bip39 } from 'bsv2'
+
+const mnemonic = new Bip39().fromRandom(128)
+const seed = mnemonic.toSeed('') // optional BIP39 passphrase
+const accountKey = Bip32.fromSeed(seed).derive("m/44'/0'/0'/0/0")
+
+console.log(mnemonic.toString()) // twelve words for 128 bits of entropy
+console.log(Address.fromPubKey(accountKey.pubKey).toString())
+```
+
+### Sign and verify a transaction input
+
+This signs a pay-to-pubkey input with `SIGHASH_ALL | SIGHASH_FORKID` and checks
+it with the script interpreter. The funding transaction is fabricated here; in
+an application you would obtain it from your indexer or node.
+
+```js
+import { Bn, Interp, KeyPair, Script, Sig, Tx } from 'bsv2'
+
+const keyPair = new KeyPair().fromRandom()
+const scriptPubKey = new Script()
+  .writeBuffer(keyPair.pubKey.toDer(true))
+  .writeString('OP_CHECKSIG')
+
+const valueBn = new Bn(1000)
+const fundingTx = new Tx()
+  .addTxIn(Buffer.alloc(32), 0xffffffff, new Script(), 0xffffffff)
+  .addTxOut(valueBn, scriptPubKey)
+
+const spendTx = new Tx()
+  .addTxIn(fundingTx.hash(), 0, new Script(), 0xffffffff)
+  .addTxOut(new Bn(900), scriptPubKey)
+
+const nHashType = Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID
+const sig = spendTx.sign(keyPair, nHashType, 0, scriptPubKey, valueBn)
+const scriptSig = new Script().writeBuffer(sig.toTxFormat())
+spendTx.txIns[0].setScript(scriptSig)
+
+const valid = new Interp().verify(
+  scriptSig,
+  scriptPubKey,
+  spendTx,
+  0,
+  undefined,
+  valueBn
+)
+console.log(valid) // true
+```
+
+`TxVerifier.verify(tx, txOutMap)` is available when you want to validate every
+input of a transaction at once.
+
+### Pre-Genesis script policy
+
+BSV Genesis raised several legacy Bitcoin limits. If you need to evaluate an
+old script under the original rules, add `Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS`
+to the verification flags:
+
+```js
+import { Bn, Interp, Script, Tx } from 'bsv2'
+
+const flags = Interp.SCRIPT_VERIFY_P2SH |
+  Interp.SCRIPT_VERIFY_STRICTENC |
+  Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS
+
+const scriptSig = new Script().fromBitcoindString('2147483648 0 ADD')
+const scriptPubKey = new Script().fromBitcoindString('NOP')
+
+// false with the flag: 5-byte script numbers are rejected (4-byte limit)
+const valid = new Interp().verify(scriptSig, scriptPubKey, new Tx(), 0, flags, new Bn(0))
+```
+
+The flag restores: 4-byte script numbers, 520-byte push limit, 10 KB script
+limit, 1000-element stack limit and the pre-Genesis disabled opcodes. It is not
+part of `Interp.defaultFlags` and must be requested explicitly.
+
+## API map
+
+All symbols below are exported from the package root (`entry.js`).
+
+| Area | Exports |
+| --- | --- |
+| Keys and addresses | `KeyPair`, `PrivKey`, `PubKey`, `Address` |
+| HD wallets / mnemonics | `Bip32`, `Bip39`, and the `en`, `es`, `jp` wordlists |
+| Transactions | `Tx`, `TxIn`, `TxOut`, `TxOutMap`, `TxBuilder`, `TxVerifier`, `Sig`, `SigOperations` |
+| Scripts | `Script`, `OpCode`, `Interp` |
+| Blocks and mining | `Block`, `MinableBlock`, `BlockHeader`, `MiningUtils`, `getConstants` |
+| Cryptography and math | `Bn`, `Point`, `Ecdsa`, `Hash`, `Random`, `Aes`, `Aescbc`, `Cbc`, `Ecies`, `Ach` |
+| Serialization / utilities | `Struct`, `Br`, `Bw`, `Bsm`, `VarInt`, `Base58`, `Base58Check`, `cmp`, `Constants` |
+| Workers | `Workers`, `WorkersResult` |
+| Package | `deps`, `version` |
+
+Additional modules under `lib/` (for example `Msg`, `Version`, `Merkle` and
+`HashCache`) are used internally and are not re-exported from the package root.
+
+For the full method-level reference, generate the HTML documentation:
+
+```bash
+yarn doc   # writes doc/index.html
+```
+
+Instance methods generally mutate the object and return `this`. For example:
+
+```js
+const tx = new Tx().addTxIn(...).addTxOut(...)
+const hex = tx.toHex()
+const sameTx = Tx.fromHex(hex)
+```
+
+## Development
+
+```bash
+corepack yarn install       # install from yarn.lock
+yarn test:run               # run the full suite once (Vitest)
+yarn lint                   # ESLint
+yarn build                  # build dist/bsv2.{mjs,cjs,umd.js}
+yarn doc                    # regenerate API documentation
+```
+
+The suite has over 9,000 tests, including the reference vectors from bitcoind,
+Bitcoin ABC and Bitcoin SV. It also includes dedicated tests for the legacy
+script policy flag. `yarn test` starts Vitest in watch mode.
+
+Commits and release tags are GPG-signed, and `commit.gpgsign` is enabled for
+future commits. Releases are published to npm and GitHub Releases with the same
+version number. `resolutions` (Yarn) and `overrides` (npm) keep transitive
+dependencies pinned to patched versions.
+
+## Differences from upstream `bsv` 2.x
+
+- Published as **`bsv2`**; ESM-first with a matching CommonJS and UMD build.
+- Default sighash behaviour follows BSV (`SIGHASH_FORKID`); pre-Genesis rules
+  are available through the explicit flag described above.
+- The `Bn` wrapper was rewritten and the script interpreter received targeted
+  correctness fixes; see the commit history for details.
+- Japanese BIP39 vectors, `Buffer`/`pbkdf2` interoperability and mnemonic
+  whitespace validation were fixed.
+- Legacy bitcoind sighash vectors are evaluated with forkid disabled in the
+  test suite, since they predate BSV.
+
+## Security
+
+Please report security issues privately through the repository's security
+advisories on GitHub rather than opening a public issue.
+
+## Credits and license
+
+Based on the original `bsv` library by Manuel Araoz and contributors, with
+contributions from the `bsv2` community. See `package.json` for the full
+contributor list.
+
+[MIT](./LICENSE)
