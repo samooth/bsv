@@ -30,7 +30,7 @@ of the `bsv` 2.x codebase: same class-based API, published on npm as
 npm install bsv2
 ```
 
-Node.js 18 or newer is required.
+Node.js 20.19 or newer is required (the development toolchain uses Vite 7).
 
 ```js
 // ESM (package.json "type": "module", or a .mjs file)
@@ -247,6 +247,21 @@ dependencies pinned to patched versions.
 - Pre-BIP143 sighash vectors are evaluated with forkid disabled, and
   pre-Chronicle ABC vectors whose random `0x20` bit changed meaning are
   excluded from the test suite.
+
+## Ecosystem: BRC-100 and ts-stack
+
+`bsv2` is a low-level primitives library: transactions, scripts, keys,
+cryptography and serialization. It does **not** implement the BRC-100
+wallet-to-application interface.
+
+For BRC-100 integrations use the BSV Association reference implementations in
+[`bsv-blockchain/ts-stack`](https://github.com/bsv-blockchain/ts-stack):
+
+- `@bsv/sdk` — primitives, identities, overlays and the BRC-100 `WalletClient`.
+- `@bsv/wallet-toolbox` — BRC-100 storage, services, signing and wallet tooling
+  (`WalletSigner`, baskets, BEEF, BKDS key derivation).
+
+See [BRC-100](https://bsv.brc.dev/wallet/0100.md) for the normative interface.
 
 ## Security
 

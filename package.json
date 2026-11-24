@@ -24,16 +24,14 @@
   "unpkg": "./dist/bsv2.umd.js",
   "library": "bsv2",
   "scripts": {
-    "clean": "rm -rf node_modules/* yarn.lock",
-    "lint": "npx eslint *.js lib/**/*.js bin/**/*.js test/**/*.js",
-    "pretest": "npx yarn run lint",
-    "test": "npx vitest",
-    "test:run": "npx vitest run",
-    "build": "npx vite build",
-    "prepublish": "npx yarn build",
-    "prepack": "npx yarn build",
-    "doc": "npx documentation build entry.js -f html -o doc",
-    "prepare": "husky"
+    "clean": "rm -rf node_modules dist",
+    "lint": "eslint *.js lib/**/*.js bin/**/*.js test/**/*.js",
+    "pretest": "npm run lint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "build": "vite build",
+    "doc": "documentation build entry.js -f html -o doc",
+    "prepare": "husky && npm run build"
   },
   "contributors": [
     {
@@ -105,7 +103,7 @@
     "url": "git+https://github.com/samooth/bsv.git"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.19.0"
   },
   "dependencies": {
     "aes": "^0.1.0",
@@ -135,7 +133,8 @@
     "vite-plugin-node-polyfills": "^0.2.0",
     "vitest": "^4.1.12",
     "webpack": "^5.104.1",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^6.0.1",
+    "documentation": "^14.0.3"
   },
   "license": "MIT",
   "standard": {
