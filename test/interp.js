@@ -757,6 +757,118 @@ describe('Interp', function () {
       run([], [0x60, 0x52, 0xb7, 0x54, 0x9c], flags).should.equal(true)
     })
 
+    it('should clear conditionals when OP_RETURN ends the unlocking script', function () {
+      // OP_1 OP_IF OP_RETURN OP_ENDIF OP_2 in the unlocking script;
+      // OP_1 OP_NUMEQUAL in the locking script.
+      run([0x51, 0x51, 0x63, 0x6a, 0x68, 0x52], [0x51, 0x9c], flags).should.equal(true)
+    })
+
+    it('should preserve sign in numeric shifts', function () {
+      // -1 << 1 == -2
+      run([], [0x4f, 0x51, 0xb6, 0x52, 0x8f, 0x9c], flags).should.equal(true)
+      // -1 >> 1 == -1
+      run([], [0x4f, 0x51, 0xb7, 0x4f, 0x9c], flags).should.equal(true)
+      // -3 >> 1 == -2 (rounds toward negative infinity)
+      run(
+        [],
+        [0x53, 0x8f, 0x51, 0xb7, 0x52, 0x8f, 0x9c],
+        flags
+      ).should.equal(true)
+    })
+
+    it('should accept high-S signatures under Chronicle only', function () {
+      const keyPair = new KeyPair().fromRandom()
+      const scriptPubKey = new Script()
+        .writeBuffer(keyPair.pubKey.toDer(true))
+        .writeString('OP_CHECKSIG')
+      const valueBn = new Bn(1000)
+      const funding = new Tx()
+        .addTxIn(Buffer.alloc(32), 0xffffffff, new Script(), 0xffffffff)
+        .addTxOut(valueBn, scriptPubKey)
+      const spend = new Tx()
+        .addTxIn(funding.hash(), 0, new Script(), 0xffffffff)
+        .addTxOut(new Bn(900), scriptPubKey)
+      const nHashType =
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID | Sig.SIGHASH_CHRONICLE
+      const sig = spend.sign(keyPair, nHashType, 0, scriptPubKey, valueBn)
+      const order = Bn.fromBuffer(
+        Buffer.from(
+          'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141',
+          'hex'
+        )
+      )
+      const highS = new Sig().fromObject({
+        r: sig.r,
+        s: order.sub(sig.s),
+        nHashType
+      })
+      highS.hasLowS().should.equal(false)
+      const scriptSig = new Script().writeBuffer(highS.toTxFormat())
+      spend.txIns[0].setScript(scriptSig)
+      new Interp()
+        .verify(
+          scriptSig,
+          scriptPubKey,
+          spend,
+          0,
+          Interp.SCRIPT_ENABLE_SIGHASH_FORKID |
+            Interp.SCRIPT_VERIFY_LOW_S,
+          valueBn
+        )
+        .should.equal(false)
+      new Interp()
+        .verify(
+          scriptSig,
+          scriptPubKey,
+          spend,
+          0,
+          Interp.SCRIPT_ENABLE_SIGHASH_FORKID | CHRONICLE,
+          valueBn
+        )
+        .should.equal(true)
+    })
+
+    it('should accept a non-empty CHECKMULTISIG dummy under Chronicle only', function () {
+      const keyPair = new KeyPair().fromRandom()
+      const scriptPubKey = new Script()
+        .writeString('OP_1')
+        .writeBuffer(keyPair.pubKey.toDer(true))
+        .writeString('OP_1 OP_CHECKMULTISIG')
+      const valueBn = new Bn(1000)
+      const funding = new Tx()
+        .addTxIn(Buffer.alloc(32), 0xffffffff, new Script(), 0xffffffff)
+        .addTxOut(valueBn, scriptPubKey)
+      const spend = new Tx()
+        .addTxIn(funding.hash(), 0, new Script(), 0xffffffff)
+        .addTxOut(new Bn(900), scriptPubKey)
+      const nHashType =
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID | Sig.SIGHASH_CHRONICLE
+      const sig = spend.sign(keyPair, nHashType, 0, scriptPubKey, valueBn)
+      const scriptSig = new Script().writeString('OP_1').writeBuffer(sig.toTxFormat())
+      spend.txIns[0].setScript(scriptSig)
+      const baseFlags =
+        Interp.SCRIPT_ENABLE_SIGHASH_FORKID | Interp.SCRIPT_VERIFY_NULLDUMMY
+      new Interp().verify(scriptSig, scriptPubKey, spend, 0, baseFlags, valueBn).should.equal(false)
+      new Interp()
+        .verify(scriptSig, scriptPubKey, spend, 0, baseFlags | CHRONICLE, valueBn)
+        .should.equal(true)
+    })
+
+    it('should activate Chronicle from a transaction version above 1', function () {
+      const tx = new Tx().fromObject({ versionBytesNum: 2 })
+      const interp = new Interp()
+      const verified = interp.verify(
+        new Script().fromBuffer(Buffer.from([4, 2, 0, 0, 0])),
+        new Script().fromBuffer(Buffer.from([0x65, 0x51, 0x67, 0x00, 0x68])),
+        tx,
+        0,
+        Interp.SCRIPT_VERIFY_P2SH,
+        new Bn(0)
+      )
+      verified.should.equal(true)
+      interp.isChronicle().should.equal(true)
+    })
+
     it('should allow a non-clean stack under Chronicle', function () {
       run([0x51], [0x51, 0x51], Interp.defaultFlags).should.equal(false)
       run([0x51], [0x51, 0x51], flags).should.equal(true)
