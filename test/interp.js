@@ -674,5 +674,103 @@ describe('Interp', function () {
       )
     })
   })
+
+  describe('Chronicle opcodes and policy', function () {
+    const CHRONICLE = Interp.SCRIPT_VERIFY_CHRONICLE
+    const flags = Interp.defaultFlags | CHRONICLE
+
+    const run = function (sigBytes, pubBytes, verificationFlags) {
+      return new Interp().verify(
+        new Script().fromBuffer(Buffer.from(sigBytes)),
+        new Script().fromBuffer(Buffer.from(pubBytes)),
+        new Tx(),
+        0,
+        verificationFlags,
+        new Bn(0)
+      )
+    }
+
+    const push = function (str) {
+      return Buffer.concat([Buffer.from([str.length]), Buffer.from(str)])
+    }
+
+    it('should push the transaction version with OP_VER', function () {
+      // OP_VER OP_1 OP_NUMEQUAL (version 1, non-minimal encoding allowed)
+      run([], [0x62, 0x51, 0x9c], flags).should.equal(true)
+    })
+
+    it('should evaluate OP_VERIF', function () {
+      run([4, 1, 0, 0, 0], [0x65, 0x51, 0x67, 0x00, 0x68], flags).should.equal(true)
+      run([4, 2, 0, 0, 0], [0x65, 0x51, 0x67, 0x00, 0x68], flags).should.equal(false)
+    })
+
+    it('should evaluate OP_VERNOTIF', function () {
+      run([4, 2, 0, 0, 0], [0x66, 0x51, 0x67, 0x00, 0x68], flags).should.equal(true)
+    })
+
+    it('should reject VERIF/VERNOTIF outside Chronicle', function () {
+      run([4, 1, 0, 0, 0], [0x65, 0x51, 0x67, 0x00, 0x68], Interp.defaultFlags).should.equal(false)
+    })
+
+    it('should evaluate OP_SUBSTR', function () {
+      const pub = Buffer.concat([
+        push('HelloWorld'),
+        Buffer.from([0x54, 0x55, 0xb3]), // OP_4 OP_5 OP_SUBSTR_CHRONICLE
+        push('oWorl'),
+        Buffer.from([0x87]) // OP_EQUAL
+      ])
+      run([], pub, flags).should.equal(true)
+    })
+
+    it('should evaluate OP_LEFT', function () {
+      const pub = Buffer.concat([
+        push('HelloWorld'),
+        Buffer.from([0x55, 0xb4]),
+        push('Hello'),
+        Buffer.from([0x87])
+      ])
+      run([], pub, flags).should.equal(true)
+    })
+
+    it('should evaluate OP_RIGHT', function () {
+      const pub = Buffer.concat([
+        push('HelloWorld'),
+        Buffer.from([0x55, 0xb5]),
+        push('World'),
+        Buffer.from([0x87])
+      ])
+      run([], pub, flags).should.equal(true)
+    })
+
+    it('should reject out-of-range string operations', function () {
+      const pub = Buffer.concat([push('abc'), Buffer.from([0x56, 0xb4])]) // len 6 > size
+      run([], pub, flags).should.equal(false)
+    })
+
+    it('should evaluate OP_2MUL and OP_2DIV', function () {
+      run([], [0x51, 0x8d, 0x52, 0x9c], flags).should.equal(true)
+      run([], [0x52, 0x8e, 0x51, 0x9c], flags).should.equal(true)
+    })
+
+    it('should evaluate OP_LSHIFTNUM and OP_RSHIFTNUM', function () {
+      run([], [0x51, 0x52, 0xb6, 0x54, 0x9c], flags).should.equal(true)
+      run([], [0x60, 0x52, 0xb7, 0x54, 0x9c], flags).should.equal(true)
+    })
+
+    it('should allow a non-clean stack under Chronicle', function () {
+      run([0x51], [0x51, 0x51], Interp.defaultFlags).should.equal(false)
+      run([0x51], [0x51, 0x51], flags).should.equal(true)
+    })
+
+    it('should allow functional opcodes in the unlocking script under Chronicle', function () {
+      run([0x51, 0x75], [0x51], Interp.defaultFlags).should.equal(false)
+      run([0x51, 0x75], [0x51], flags).should.equal(true)
+    })
+
+    it('should let OP_RETURN in the unlocking script end only that script', function () {
+      run([0x51, 0x6a, 0x52], [0x51, 0x9c], Interp.defaultFlags).should.equal(false)
+      run([0x51, 0x6a, 0x52], [0x51, 0x9c], flags).should.equal(true)
+    })
+  })
   })
 })
