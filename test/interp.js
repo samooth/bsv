@@ -869,6 +869,84 @@ describe('Interp', function () {
       interp.isChronicle().should.equal(true)
     })
 
+    it('should allow mixed CHRONICLE bits across inputs', function () {
+      const keyPair = new KeyPair().fromRandom()
+      const scriptPubKey = new Script()
+        .writeBuffer(keyPair.pubKey.toDer(true))
+        .writeString('OP_CHECKSIG')
+      const valueBn = new Bn(1000)
+      const funding = new Tx()
+        .addTxIn(Buffer.alloc(32), 0xffffffff, new Script(), 0xffffffff)
+        .addTxOut(valueBn, scriptPubKey)
+        .addTxOut(valueBn, scriptPubKey)
+      const spend = new Tx()
+        .addTxIn(funding.hash(), 0, new Script(), 0xffffffff)
+        .addTxIn(funding.hash(), 1, new Script(), 0xffffffff)
+        .addTxOut(new Bn(1800), scriptPubKey)
+      const base =
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID
+      const types = [base | Sig.SIGHASH_CHRONICLE, base]
+      const verificationFlags = [
+        Interp.SCRIPT_ENABLE_SIGHASH_FORKID | CHRONICLE,
+        Interp.SCRIPT_ENABLE_SIGHASH_FORKID
+      ]
+      for (let nIn = 0; nIn < 2; nIn++) {
+        const sig = spend.sign(keyPair, types[nIn], nIn, scriptPubKey, valueBn)
+        const scriptSig = new Script().writeBuffer(sig.toTxFormat())
+        spend.txIns[nIn].setScript(scriptSig)
+        new Interp()
+          .verify(
+            scriptSig,
+            scriptPubKey,
+            spend,
+            nIn,
+            verificationFlags[nIn],
+            valueBn
+          )
+          .should.equal(true)
+      }
+    })
+
+    it('should use the locked script after CODESEPARATOR as unlocking scriptCode', function () {
+      const keyPair = new KeyPair().fromRandom()
+      const pubBuf = keyPair.pubKey.toDer(true)
+      const locking = new Script().writeBuffer(pubBuf).writeString('OP_CHECKSIG')
+      const valueBn = new Bn(1000)
+      const funding = new Tx()
+        .addTxIn(Buffer.alloc(32), 0xffffffff, new Script(), 0xffffffff)
+        .addTxOut(valueBn, locking)
+      const spend = new Tx()
+        .addTxIn(funding.hash(), 0, new Script(), 0xffffffff)
+        .addTxOut(new Bn(900), locking)
+      const nHashType =
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID | Sig.SIGHASH_CHRONICLE
+      const unlockingTail = new Script()
+        .writeBuffer(pubBuf)
+        .writeString('OP_CHECKSIG OP_DROP')
+      const combined = new Script().fromObject({
+        chunks: unlockingTail.chunks.concat(locking.chunks)
+      })
+      const sig0 = spend.sign(keyPair, nHashType, 0, locking, valueBn)
+      const sig1 = spend.sign(keyPair, nHashType, 0, combined, valueBn)
+      const scriptSig = new Script()
+        .writeBuffer(sig0.toTxFormat())
+        .writeBuffer(sig1.toTxFormat())
+        .writeString('OP_CODESEPARATOR')
+        .writeBuffer(pubBuf)
+        .writeString('OP_CHECKSIG OP_DROP')
+      spend.txIns[0].setScript(scriptSig)
+      new Interp()
+        .verify(
+          scriptSig,
+          locking,
+          spend,
+          0,
+          Interp.SCRIPT_ENABLE_SIGHASH_FORKID | CHRONICLE,
+          valueBn
+        )
+        .should.equal(true)
+    })
+
     it('should allow a non-clean stack under Chronicle', function () {
       run([0x51], [0x51, 0x51], Interp.defaultFlags).should.equal(false)
       run([0x51], [0x51, 0x51], flags).should.equal(true)
@@ -882,6 +960,87 @@ describe('Interp', function () {
     it('should let OP_RETURN in the unlocking script end only that script', function () {
       run([0x51, 0x6a, 0x52], [0x51, 0x9c], Interp.defaultFlags).should.equal(false)
       run([0x51, 0x6a, 0x52], [0x51, 0x9c], flags).should.equal(true)
+    })
+  })
+
+  describe('minimal IF and NULLFAIL', function () {
+    const CHRONICLE = Interp.SCRIPT_VERIFY_CHRONICLE
+
+    it('should enforce MINIMALIF unless Chronicle is active', function () {
+      const sig = Buffer.concat([Buffer.from([2]), Buffer.from([1, 0])])
+      const pub = Buffer.from([0x63, 0x51, 0x67, 0x00, 0x68]) // IF 1 ELSE 0 ENDIF
+      const check = function (flags) {
+        return new Interp().verify(
+          new Script().fromBuffer(sig),
+          new Script().fromBuffer(pub),
+          new Tx(),
+          0,
+          flags,
+          new Bn(0)
+        )
+      }
+      check(Interp.SCRIPT_VERIFY_MINIMALIF).should.equal(false)
+      check(Interp.SCRIPT_VERIFY_MINIMALIF | CHRONICLE).should.equal(true)
+      check(0).should.equal(true)
+    })
+
+    it('should parse MINIMALIF and NULLFAIL from flag strings', function () {
+      Interp.getFlags('MINIMALIF,NULLFAIL').should.equal(
+        Interp.SCRIPT_VERIFY_MINIMALIF | Interp.SCRIPT_VERIFY_NULLFAIL
+      )
+    })
+
+    it('should report NULLFAIL on a failed CHECKSIG unless Chronicle is active', function () {
+      const keyPair = new KeyPair().fromRandom()
+      const scriptPubKey = new Script()
+        .writeBuffer(keyPair.pubKey.toDer(true))
+        .writeString('OP_CHECKSIG')
+      const invalidSig = new Script().writeBuffer(Buffer.from([0x30]))
+      const flags = Interp.SCRIPT_VERIFY_NULLFAIL | Interp.SCRIPT_ENABLE_SIGHASH_FORKID
+      const interp = new Interp()
+      interp.verify(invalidSig, scriptPubKey, new Tx(), 0, flags, new Bn(0)).should.equal(false)
+      interp.errStr.should.equal('SCRIPT_ERR_SIG_NULLFAIL')
+
+      const chronicle = new Interp()
+      chronicle
+        .verify(
+          invalidSig,
+          scriptPubKey,
+          new Tx(),
+          0,
+          flags | CHRONICLE,
+          new Bn(0)
+        )
+        .should.equal(false)
+      chronicle.errStr.should.not.equal('SCRIPT_ERR_SIG_NULLFAIL')
+    })
+
+    it('should report NULLFAIL on a failed CHECKMULTISIG unless Chronicle is active', function () {
+      const keyPair = new KeyPair().fromRandom()
+      const scriptPubKey = new Script()
+        .writeString('OP_1')
+        .writeBuffer(keyPair.pubKey.toDer(true))
+        .writeString('OP_1 OP_CHECKMULTISIG')
+      const invalidSig = new Script()
+        .writeString('OP_0')
+        .writeBuffer(Buffer.from([0x30]))
+      const flags = Interp.SCRIPT_VERIFY_NULLFAIL | Interp.SCRIPT_ENABLE_SIGHASH_FORKID
+      const interp = new Interp()
+      interp.verify(invalidSig, scriptPubKey, new Tx(), 0, flags, new Bn(0)).should.equal(false)
+      interp.errStr.should.equal('SCRIPT_ERR_SIG_NULLFAIL')
+
+      const chronicle = new Interp()
+      chronicle
+        .verify(
+          invalidSig,
+          scriptPubKey,
+          new Tx(),
+          0,
+          flags | CHRONICLE,
+          new Bn(0)
+        )
+        .should.equal(false)
+      chronicle.errStr.should.not.equal('SCRIPT_ERR_SIG_NULLFAIL')
     })
   })
   })

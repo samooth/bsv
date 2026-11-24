@@ -160,10 +160,9 @@ Chronicle activates at mainnet height 943,835, testnet 1,713,022 and regtest
   keep using BIP143. OTDA ignores `valueBn`, and the bit may be mixed across
   inputs.
 - `tx.versionBytesNum > 1`, or `Interp.SCRIPT_VERIFY_CHRONICLE`, enables the
-  relaxed script policy: minimal encoding, Low-S, NULLDUMMY, clean stack and
-  push-only unlocking scripts are no longer enforced. Version-1 transactions
-  keep the existing checks. MINIMALIF and NULLFAIL are not enforced by this
-  library for either version.
+  relaxed script policy: minimal encoding, Low-S, MINIMALIF, NULLFAIL,
+  NULLDUMMY, clean stack and push-only unlocking scripts are no longer
+  enforced. Version-1 transactions keep the checks enabled by the flags.
 - Restored opcodes: `OP_VER`, `OP_VERIF`, `OP_VERNOTIF`, `OP_SUBSTR`,
   `OP_LEFT`, `OP_RIGHT`, `OP_2MUL`, `OP_2DIV`, `OP_LSHIFTNUM`, `OP_RSHIFTNUM`.
   `OpCode.OP_SUBSTR_CHRONICLE`, `OP_LEFT_CHRONICLE`, `OP_RIGHT_CHRONICLE`,
