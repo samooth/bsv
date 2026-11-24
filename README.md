@@ -12,8 +12,10 @@ of the `bsv` 2.x codebase: same class-based API, published on npm as
 ## Features
 
 - Transactions and scripts with BSV `SIGHASH_FORKID` semantics.
-- A script interpreter with the standard verification flags, plus an opt-in
-  pre-Genesis policy mode.
+- Chronicle support: the Original Transaction Digest Algorithm (OTDA), the
+  restored opcodes and the opt-in malleability policy.
+- A script interpreter with the standard verification flags, plus opt-in
+  pre-Genesis and Chronicle policy modes.
 - Keys, addresses, BIP32 hierarchical deterministic wallets and BIP39 mnemonics
   (English, Spanish and Japanese wordlists).
 - Block and block-header serialization, plus mining utilities.
@@ -148,6 +150,36 @@ The flag restores: 4-byte script numbers, 520-byte push limit, 10 KB script
 limit, 1000-element stack limit and the pre-Genesis disabled opcodes. It is not
 part of `Interp.defaultFlags` and must be requested explicitly.
 
+## Chronicle release
+
+Chronicle activates at mainnet height 943,835, testnet 1,713,022 and regtest
+15,000. The library exposes its rules without requiring a block height.
+
+- Set `Sig.SIGHASH_CHRONICLE` (`0x20`) in a signature hash type to select the
+  Original Transaction Digest Algorithm (OTDA). ForkID signatures without it
+  keep using BIP143. OTDA ignores `valueBn`, and the bit may be mixed across
+  inputs.
+- `tx.versionBytesNum > 1`, or `Interp.SCRIPT_VERIFY_CHRONICLE`, enables the
+  relaxed script policy: minimal encoding, Low-S, NULLDUMMY, clean stack and
+  push-only unlocking scripts are no longer enforced. Version-1 transactions
+  keep the existing checks. MINIMALIF and NULLFAIL are not enforced by this
+  library for either version.
+- Restored opcodes: `OP_VER`, `OP_VERIF`, `OP_VERNOTIF`, `OP_SUBSTR`,
+  `OP_LEFT`, `OP_RIGHT`, `OP_2MUL`, `OP_2DIV`, `OP_LSHIFTNUM`, `OP_RSHIFTNUM`.
+  `OpCode.OP_SUBSTR_CHRONICLE`, `OP_LEFT_CHRONICLE`, `OP_RIGHT_CHRONICLE`,
+  `OP_LSHIFTNUM` and `OP_RSHIFTNUM` hold the new numbers because Genesis
+  reassigned the original ones.
+- The script-number consensus limit rises to 32 MB; nodes may still set a
+  lower policy limit.
+
+`Interp.getFlags('CHRONICLE')` includes the flag, which is not part of
+`Interp.defaultFlags`. To sign with OTDA, add the bit to the hash type:
+
+```js
+const nHashType = Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID | Sig.SIGHASH_CHRONICLE
+const sig = spendTx.sign(keyPair, nHashType, 0, scriptPubKey, valueBn)
+```
+
 ## API map
 
 All symbols below are exported from the package root (`entry.js`).
@@ -191,9 +223,9 @@ yarn build                  # build dist/bsv2.{mjs,cjs,umd.js}
 yarn doc                    # regenerate API documentation
 ```
 
-The suite has over 9,000 tests, including the reference vectors from bitcoind,
-Bitcoin ABC and Bitcoin SV. It also includes dedicated tests for the legacy
-script policy flag. `yarn test` starts Vitest in watch mode.
+The suite has over 8,500 tests, including reference vectors from bitcoind,
+Bitcoin ABC and Bitcoin SV, plus dedicated tests for the pre-Genesis and
+Chronicle policies. `yarn test` starts Vitest in watch mode.
 
 Commits and release tags are GPG-signed, and `commit.gpgsign` is enabled for
 future commits. Releases are published to npm and GitHub Releases with the same
@@ -203,14 +235,15 @@ dependencies pinned to patched versions.
 ## Differences from upstream `bsv` 2.x
 
 - Published as **`bsv2`**; ESM-first with a matching CommonJS and UMD build.
-- Default sighash behaviour follows BSV (`SIGHASH_FORKID`); pre-Genesis rules
-  are available through the explicit flag described above.
+- Default sighash behaviour follows BSV (`SIGHASH_FORKID`). Pre-Genesis rules
+  and the Chronicle release rules are opt-in flags.
 - The `Bn` wrapper was rewritten and the script interpreter received targeted
   correctness fixes; see the commit history for details.
 - Japanese BIP39 vectors, `Buffer`/`pbkdf2` interoperability and mnemonic
   whitespace validation were fixed.
-- Legacy bitcoind sighash vectors are evaluated with forkid disabled in the
-  test suite, since they predate BSV.
+- Pre-BIP143 sighash vectors are evaluated with forkid disabled, and
+  pre-Chronicle ABC vectors whose random `0x20` bit changed meaning are
+  excluded from the test suite.
 
 ## Security
 
