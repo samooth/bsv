@@ -682,9 +682,21 @@ describe('Sig', function () {
         .hasDefinedHashType()
         .should.equal(true)
       new Sig()
-        .fromObject({ nHashType: 0x20 })
+        .fromObject({ nHashType: Sig.SIGHASH_CHRONICLE })
         .hasDefinedHashType()
         .should.equal(false)
+    })
+
+    it('should accept ForkID and ANYONECANPAY as modifiers', function () {
+      const valid = [
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID,
+        Sig.SIGHASH_NONE | Sig.SIGHASH_ANYONECANPAY,
+        Sig.SIGHASH_SINGLE | Sig.SIGHASH_FORKID | Sig.SIGHASH_CHRONICLE |
+          Sig.SIGHASH_ANYONECANPAY
+      ]
+      valid.forEach(function (nHashType) {
+        new Sig().fromObject({ nHashType }).hasDefinedHashType().should.equal(true)
+      })
     })
   })
   })

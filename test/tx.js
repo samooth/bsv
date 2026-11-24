@@ -465,6 +465,12 @@ describe('Tx', function () {
       if (i === 0) {
         return
       }
+      // These pre-Chronicle vectors use random high bits in hashType. A set
+      // 0x20 bit now selects OTDA, so their BIP143 expectations no longer
+      // describe consensus behaviour. Chronicle vectors below cover OTDA.
+      if (vector[3] & Sig.SIGHASH_CHRONICLE) {
+        return
+      }
       it('should pass bitcoin-abc sighash test vector ' + i, function () {
         if (vector[0] === 'Test vectors for SIGHASH_FORKID') {
           return
@@ -494,6 +500,56 @@ describe('Tx', function () {
           .toString('hex')
           .should.equal(sighashBuf.toString('hex'))
       })
+    })
+
+    // Expected hashes were computed independently from the OTDA algorithm in
+    // bitcoin-sv's SignatureHashOriginal (src/script/interpreter.cpp).
+    const chronicleVectors = [
+      [1, Sig.SIGHASH_CHRONICLE, '98999ecfbb328982e6ea8d019b3e027f19f52c851d0a8d9bff949c846ad6b3f5'],
+      [1, Sig.SIGHASH_CHRONICLE | Sig.SIGHASH_FORKID, '8ffd3f8f8332c9547e7184d7b8348b210c3190261e6d37ce19e0d28d1c3f275a'],
+      [2, Sig.SIGHASH_CHRONICLE, '735fe9866b4a722bf5834491769e2cfca6caf07a0417d0ff4fb1465877bfabce'],
+      [3, Sig.SIGHASH_CHRONICLE, '2a3d95b09237b72034b23f2d2bb29fa32a58ab5c6aa72f6aafdfa178ab1dd01c'],
+      [5, Sig.SIGHASH_CHRONICLE, 'f03aa4fc5f97e826323d0daa03343ebf8a34ed67a1ce18631f8b88e5c992e798'],
+      [10, Sig.SIGHASH_CHRONICLE, '33e210d6585870940b3d72b26aa113d0565591da0afbeed6cf5b7e64c4b4a475']
+    ]
+    chronicleVectors.forEach(function (entry) {
+      const index = entry[0]
+      const extra = entry[1]
+      const expected = entry[2]
+      it('should use OTDA with CHRONICLE for sighash vector ' + index + ' and flag ' + extra.toString(16), function () {
+        const vector = vectorsBitcoindSighash[index]
+        const tx = Tx.fromBuffer(Buffer.from(vector[0], 'hex'))
+        const subScript = new Script().fromBuffer(Buffer.from(vector[1], 'hex'))
+        const nHashType = vector[3] | extra
+        tx
+          .sighash(
+            nHashType,
+            vector[2],
+            subScript,
+            new Bn(0),
+            Tx.SCRIPT_ENABLE_SIGHASH_FORKID
+          )
+          .toString('hex')
+          .should.equal(expected)
+      })
+    })
+
+    it('should ignore valueBn under Chronicle but not under ForkID', function () {
+      const vector = vectorsBitcoindSighash[1]
+      const tx = Tx.fromBuffer(Buffer.from(vector[0], 'hex'))
+      const subScript = new Script().fromBuffer(Buffer.from(vector[1], 'hex'))
+      const nHashType = Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID
+      tx.sighash(nHashType, vector[2], subScript, new Bn(0), Tx.SCRIPT_ENABLE_SIGHASH_FORKID)
+        .toString('hex')
+        .should.not.equal(
+          tx.sighash(nHashType, vector[2], subScript, new Bn(1000), Tx.SCRIPT_ENABLE_SIGHASH_FORKID).toString('hex')
+        )
+      const chronicled = nHashType | Sig.SIGHASH_CHRONICLE
+      tx.sighash(chronicled, vector[2], subScript, new Bn(0), Tx.SCRIPT_ENABLE_SIGHASH_FORKID)
+        .toString('hex')
+        .should.equal(
+          tx.sighash(chronicled, vector[2], subScript, new Bn(1000), Tx.SCRIPT_ENABLE_SIGHASH_FORKID).toString('hex')
+        )
     })
 
     let j = 0
