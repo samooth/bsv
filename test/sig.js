@@ -658,5 +658,34 @@ describe('Sig', function () {
         }.should.throw())
       })
     })
+
+  describe('Chronicle sighash flag', function () {
+    it('should expose the CHRONICLE bit', function () {
+      Sig.SIGHASH_CHRONICLE.should.equal(0x20)
+    })
+
+    it('should detect the flag in a hash type', function () {
+      new Sig()
+        .fromObject({ nHashType: Sig.SIGHASH_ALL | Sig.SIGHASH_CHRONICLE })
+        .isChronicle()
+        .should.equal(true)
+      new Sig().fromObject({ nHashType: Sig.SIGHASH_ALL }).isChronicle().should.equal(false)
+    })
+
+    it('should accept CHRONICLE as a defined hash type', function () {
+      new Sig()
+        .fromObject({ nHashType: Sig.SIGHASH_ALL | Sig.SIGHASH_CHRONICLE })
+        .hasDefinedHashType()
+        .should.equal(true)
+      new Sig()
+        .fromObject({ nHashType: Sig.SIGHASH_SINGLE | Sig.SIGHASH_CHRONICLE })
+        .hasDefinedHashType()
+        .should.equal(true)
+      new Sig()
+        .fromObject({ nHashType: 0x20 })
+        .hasDefinedHashType()
+        .should.equal(false)
+    })
+  })
   })
 })

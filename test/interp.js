@@ -634,5 +634,45 @@ describe('Interp', function () {
       ).should.equal(false)
     })
   })
+
+  describe('Chronicle flag', function () {
+    const CHRONICLE = Interp.SCRIPT_VERIFY_CHRONICLE
+
+    it('should not be part of the default flags', function () {
+      ;(CHRONICLE & Interp.defaultFlags).should.equal(0)
+      Interp.DEFAULT_SCRIPT_NUM_LENGTH_POLICY_AFTER_CHRONICLE.should.equal(32 * 1024 * 1024)
+    })
+
+    it('should be detected from the flag or a transaction version above 1', function () {
+      new Interp().fromObject({ flags: CHRONICLE }).isChronicle().should.equal(true)
+      new Interp().fromObject({ flags: 0, tx: new Tx() }).isChronicle().should.equal(false)
+      new Interp()
+        .fromObject({ flags: 0, tx: new Tx().fromObject({ versionBytesNum: 2 }) })
+        .isChronicle()
+        .should.equal(true)
+    })
+
+    it('should raise the script number limit', function () {
+      new Interp().fromObject({ flags: 0, tx: new Tx() }).scriptNumMaxSize().should.equal(
+        Interp.DEFAULT_SCRIPT_NUM_LENGTH_POLICY_AFTER_GENESIS
+      )
+      new Interp().fromObject({ flags: CHRONICLE }).scriptNumMaxSize().should.equal(
+        Interp.DEFAULT_SCRIPT_NUM_LENGTH_POLICY_AFTER_CHRONICLE
+      )
+    })
+
+    it('should give pre-genesis limits precedence over Chronicle', function () {
+      new Interp()
+        .fromObject({ flags: CHRONICLE | Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS })
+        .scriptNumMaxSize()
+        .should.equal(4)
+    })
+
+    it('should parse CHRONICLE from a flag string', function () {
+      Interp.getFlags('P2SH,CHRONICLE').should.equal(
+        Interp.SCRIPT_VERIFY_P2SH | CHRONICLE
+      )
+    })
+  })
   })
 })

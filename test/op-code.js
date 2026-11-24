@@ -9,14 +9,14 @@ describe('OpCode', function () {
     should.exist(opCode)
   })
 
-  it('should have 124 opCodes', function () {
+  it('should have 129 opCodes', function () {
     let i = 0
     for (const key in OpCode) {
       if (key.indexOf('OP_') !== -1) {
         i++
       }
     }
-    i.should.equal(124)
+    i.should.equal(129)
   })
 
   it('should convert to a string with this handy syntax', function () {
@@ -75,5 +75,26 @@ describe('OpCode', function () {
       should.exist(OpCode.str)
       OpCode.str[185].should.equal('OP_NOP10')
     })
+
+  describe('Chronicle opcodes', function () {
+    it('should expose the renumbered string opcodes', function () {
+      OpCode.OP_SUBSTR_CHRONICLE.should.equal(0xb3)
+      OpCode.OP_LEFT_CHRONICLE.should.equal(0xb4)
+      OpCode.OP_RIGHT_CHRONICLE.should.equal(0xb5)
+    })
+
+    it('should expose LSHIFTNUM and RSHIFTNUM', function () {
+      OpCode.OP_LSHIFTNUM.should.equal(0xb6)
+      OpCode.OP_RSHIFTNUM.should.equal(0xb7)
+    })
+
+    it('should keep the Genesis opcode mapping intact', function () {
+      OpCode.OP_SPLIT.should.equal(0x7f)
+      OpCode.OP_NUM2BIN.should.equal(0x80)
+      OpCode.OP_BIN2NUM.should.equal(0x81)
+      OpCode.OP_NOP7.should.equal(0xb6)
+      OpCode.OP_NOP8.should.equal(0xb7)
+    })
+  })
   })
 })
