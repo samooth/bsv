@@ -12,6 +12,18 @@ import bitcoindScriptInvalid from './vectors/bitcoind/script_invalid.json'
 import bitcoinABCScriptTests from './vectors/bitcoin-abc/script_tests.json'
 import bitcoinSVScriptTests from './vectors/bitcoin-sv/script_tests.json'
 
+/**
+ * Vectors written for pre-Genesis Bitcoin policy. They are run with
+ * SCRIPT_VERIFY_PREGENESIS_LIMITS, which restores the 4-byte script number
+ * limit, the 520-byte push limit, the 10KB script / 1000 stack limits and the
+ * disabled opcodes from before BSV Genesis.
+ */
+const legacyPolicyInvalid = new Set([
+  99, 100, 110, 111, 112, 113, 207, 208, 211, 212, 213,
+  222, 223, 224, 225, 226, 227, 228
+])
+const legacyPolicySV = new Set([130, 132, 160, 162])
+
 describe('Interp', function () {
   it('should make a new interp', function () {
     let interp = new Interp()
@@ -397,11 +409,14 @@ describe('Interp', function () {
         return
       }
       c++
-      it('should verify bitcoinSVScriptTests vector ' + c, function () {
+      const vectorNum = c
+      it('should verify bitcoinSVScriptTests vector ' + vectorNum +
+         (legacyPolicySV.has(vectorNum) ? ' (pre-genesis limits)' : ''), function () {
         // ["Format is: [scriptSig, scriptPubKey, flags, expected_scripterror, ... comments]"],
         const scriptSig = new Script().fromBitcoindString(vector[0])
         const scriptPubKey = new Script().fromBitcoindString(vector[1])
-        const flags = Interp.getFlags(vector[2])
+        const flags = Interp.getFlags(vector[2]) |
+          (legacyPolicySV.has(vectorNum) ? Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS : 0)
         const expectedError = vector[3]
 
         const hashBuf = Buffer.alloc(32)
@@ -482,10 +497,13 @@ describe('Interp', function () {
         return
       }
       c++
-      it('should unverify bitcoindScriptInvalid vector ' + c, function () {
+      const vectorNum = c
+      it('should unverify bitcoindScriptInvalid vector ' + vectorNum +
+         (legacyPolicyInvalid.has(vectorNum) ? ' (pre-genesis limits)' : ''), function () {
         const scriptSig = new Script().fromBitcoindString(vector[0])
         const scriptPubKey = new Script().fromBitcoindString(vector[1])
-        const flags = Interp.getFlags(vector[2])
+        const flags = Interp.getFlags(vector[2]) |
+          (legacyPolicyInvalid.has(vectorNum) ? Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS : 0)
 
         const hashBuf = Buffer.alloc(32)
         hashBuf.fill(0)
@@ -508,5 +526,113 @@ describe('Interp', function () {
         verified.should.equal(false)
       })
     })
+
+  describe('pre-genesis limits flag', function () {
+    const PRE = Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS
+    const baseFlags = Interp.SCRIPT_VERIFY_P2SH | Interp.SCRIPT_VERIFY_STRICTENC
+
+    const verifyScripts = function (scriptSig, scriptPubKey, flags) {
+      const credtx = new Tx()
+      credtx.addTxIn(
+        Buffer.alloc(32),
+        0xffffffff,
+        new Script().writeString('OP_0 OP_0'),
+        0xffffffff
+      )
+      credtx.addTxOut(new Bn(0), scriptPubKey)
+      const spendtx = new Tx()
+      spendtx.addTxIn(credtx.hash(), 0, scriptSig, 0xffffffff)
+      spendtx.addTxOut(new Bn(0), new Script())
+      return new Interp().verify(
+        scriptSig,
+        scriptPubKey,
+        spendtx,
+        0,
+        flags,
+        new Bn(0)
+      )
+    }
+
+    const verifyStrings = function (scriptSig, scriptPubKey, flags) {
+      return verifyScripts(
+        new Script().fromBitcoindString(scriptSig),
+        new Script().fromBitcoindString(scriptPubKey),
+        flags
+      )
+    }
+
+    it('should not be part of the default flags', function () {
+      ;(PRE & Interp.defaultFlags).should.equal(0)
+      Interp.PREGENESIS_SCRIPT_NUM_LENGTH.should.equal(4)
+      Interp.PREGENESIS_MAX_SCRIPT_ELEMENT_SIZE.should.equal(520)
+    })
+
+    it('should switch the helper limits on and off', function () {
+      const interp = new Interp()
+      interp.flags = Interp.defaultFlags
+      interp.scriptNumMaxSize().should.equal(
+        Interp.DEFAULT_SCRIPT_NUM_LENGTH_POLICY_AFTER_GENESIS
+      )
+      interp.maxScriptElementSize().should.equal(Interp.MAX_SCRIPT_ELEMENT_SIZE)
+      interp.setLimits().scriptLimit.should.equal(10000000)
+      interp.stackLimit.should.equal(10000000)
+
+      interp.flags = baseFlags | PRE
+      interp.isPreGenesis().should.equal(true)
+      interp.scriptNumMaxSize().should.equal(4)
+      interp.maxScriptElementSize().should.equal(520)
+      interp.setLimits().scriptLimit.should.equal(10000)
+      interp.stackLimit.should.equal(1000)
+    })
+
+    it('should reject 5-byte script numbers only with the flag', function () {
+      verifyStrings('2147483648 0 ADD', 'NOP', baseFlags).should.equal(true)
+      verifyStrings('2147483648 0 ADD', 'NOP', baseFlags | PRE).should.equal(
+        false
+      )
+    })
+
+    it('should reject pushes larger than 520 bytes only with the flag', function () {
+      const big = "'" + 'b'.repeat(521) + "'"
+      verifyStrings('NOP', big, baseFlags).should.equal(true)
+      verifyStrings('NOP', big, baseFlags | PRE).should.equal(false)
+    })
+
+    it('should reject scripts larger than 10KB only with the flag', function () {
+      const bigScript = new Script().writeBuffer(Buffer.alloc(10001, 0x51))
+      verifyScripts(new Script(), bigScript, baseFlags).should.equal(true)
+      verifyScripts(new Script(), bigScript, baseFlags | PRE).should.equal(
+        false
+      )
+    })
+
+    it('should reject stacks larger than 1000 only with the flag', function () {
+      const bigStack = new Script().fromBuffer(Buffer.alloc(1001, 0x51))
+      verifyScripts(bigStack, new Script().fromBuffer(Buffer.from([0x61])), baseFlags).should.equal(true)
+      verifyScripts(
+        bigStack,
+        new Script().fromBuffer(Buffer.from([0x61])),
+        baseFlags | PRE
+      ).should.equal(false)
+    })
+
+    it('should reject disabled opcodes in unexecuted branches only with the flag', function () {
+      verifyStrings(
+        "'abc' 2 0",
+        'IF LEFT ELSE 1 ENDIF',
+        baseFlags
+      ).should.equal(true)
+      verifyStrings(
+        "'abc' 2 0",
+        'IF LEFT ELSE 1 ENDIF',
+        baseFlags | PRE
+      ).should.equal(false)
+      verifyStrings(
+        "'abc' 2 0",
+        'IF RIGHT ELSE 1 ENDIF',
+        baseFlags | PRE
+      ).should.equal(false)
+    })
+  })
   })
 })
