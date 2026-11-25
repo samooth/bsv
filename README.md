@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/bsv2.svg)](https://www.npmjs.com/package/bsv2)
 [![license](https://img.shields.io/npm/l/bsv2.svg)](./LICENSE)
-[![node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![node](https://img.shields.io/badge/node-%3E%3D20.19-brightgreen.svg)](https://nodejs.org/)
 
 A JavaScript library for Bitcoin SV (BSV). `bsv2` is the maintained continuation
 of the `bsv` 2.x codebase: same class-based API, published on npm as
@@ -30,7 +30,7 @@ of the `bsv` 2.x codebase: same class-based API, published on npm as
 npm install bsv2
 ```
 
-Node.js 20.19 or newer is required (the development toolchain uses Vite 7).
+Node.js 20.19 or newer is required. The development toolchain uses Vite 7.
 
 ```js
 // ESM (package.json "type": "module", or a .mjs file)
@@ -86,8 +86,8 @@ console.log(Address.fromPubKey(accountKey.pubKey).toString())
 
 ### Sign and verify a transaction input
 
-This signs a pay-to-pubkey input with `SIGHASH_ALL | SIGHASH_FORKID` and checks
-it with the script interpreter. The funding transaction is fabricated here; in
+This signs a pay-to-public-key (P2PK) input with
+`SIGHASH_ALL | SIGHASH_FORKID` and checks it with the script interpreter. The funding transaction is fabricated here; in
 an application you would obtain it from your indexer or node.
 
 ```js
@@ -146,28 +146,29 @@ const scriptPubKey = new Script().fromBitcoindString('NOP')
 const valid = new Interp().verify(scriptSig, scriptPubKey, new Tx(), 0, flags, new Bn(0))
 ```
 
-The flag restores: 4-byte script numbers, 520-byte push limit, 10 KB script
-limit, 1000-element stack limit and the pre-Genesis disabled opcodes. It is not
-part of `Interp.defaultFlags` and must be requested explicitly.
+The flag restores the 4-byte script number limit, the 520-byte push limit,
+the 10 KB script limit, the 1000-element stack limit and the pre-Genesis
+disabled opcodes. It is not part of `Interp.defaultFlags` and must be
+requested explicitly.
 
 ## Chronicle release
 
 Chronicle activates at mainnet height 943,835, testnet 1,713,022 and regtest
 15,000. The library exposes its rules without requiring a block height.
 
-- Set `Sig.SIGHASH_CHRONICLE` (`0x20`) in a signature hash type to select the
-  Original Transaction Digest Algorithm (OTDA). ForkID signatures without it
+- Set `Sig.SIGHASH_CHRONICLE` (`0x20`) as part of a signature's hash type to
+  select the Original Transaction Digest Algorithm (OTDA). ForkID signatures without it
   keep using BIP143. OTDA ignores `valueBn`, and the bit may be mixed across
   inputs.
-- `tx.versionBytesNum > 1`, or `Interp.SCRIPT_VERIFY_CHRONICLE`, enables the
-  relaxed script policy: minimal encoding, Low-S, MINIMALIF, NULLFAIL,
-  NULLDUMMY, clean stack and push-only unlocking scripts are no longer
+- A transaction version above 1, or the `Interp.SCRIPT_VERIFY_CHRONICLE` flag,
+  enables the relaxed script policy: minimal encoding, Low-S, MINIMALIF,
+  NULLFAIL, NULLDUMMY, clean stack and push-only unlocking scripts are no longer
   enforced. Version-1 transactions keep the checks enabled by the flags.
 - Restored opcodes: `OP_VER`, `OP_VERIF`, `OP_VERNOTIF`, `OP_SUBSTR`,
   `OP_LEFT`, `OP_RIGHT`, `OP_2MUL`, `OP_2DIV`, `OP_LSHIFTNUM`, `OP_RSHIFTNUM`.
   `OpCode.OP_SUBSTR_CHRONICLE`, `OP_LEFT_CHRONICLE`, `OP_RIGHT_CHRONICLE`,
   `OP_LSHIFTNUM` and `OP_RSHIFTNUM` hold the new numbers because Genesis
-  reassigned the original ones.
+  repurposed the original opcodes.
 - The script-number consensus limit rises to 32 MB; nodes may still set a
   lower policy limit.
 
@@ -230,7 +231,7 @@ deterministic property tests for script, `Bn` and transaction round-trips.
 `yarn test` starts Vitest in watch mode.
 
 Scripts with truncated pushdata are parsed leniently and rejected during
-execution; the pre-Genesis reference vectors rely on that behaviour.
+execution; the pre-Genesis reference vectors rely on that behavior.
 
 Commits and release tags are GPG-signed, and `commit.gpgsign` is enabled for
 future commits. Releases are published to npm and GitHub Releases with the same
@@ -240,13 +241,13 @@ dependencies pinned to patched versions.
 ## Differences from upstream `bsv` 2.x
 
 - Published as **`bsv2`**; ESM-first with a matching CommonJS and UMD build.
-- Default sighash behaviour follows BSV (`SIGHASH_FORKID`). Pre-Genesis rules
+- Default sighash behavior follows BSV (`SIGHASH_FORKID`). Pre-Genesis rules
   and the Chronicle release rules are opt-in flags.
 - The `Bn` wrapper was rewritten and the script interpreter received targeted
   correctness fixes; see the commit history for details.
 - Japanese BIP39 vectors, `Buffer`/`pbkdf2` interoperability and mnemonic
   whitespace validation were fixed.
-- Pre-BIP143 sighash vectors are evaluated with forkid disabled, and
+- Pre-BIP143 sighash vectors are evaluated with ForkID disabled, and
   pre-Chronicle ABC vectors whose random `0x20` bit changed meaning are
   excluded from the test suite.
 
@@ -277,8 +278,18 @@ See [BRC-100](https://bsv.brc.dev/wallet/0100.md) for the normative interface.
   decoding; `SafeRecord` rejects prototype-polluting keys in untrusted JSON.
 
 BEEF (BRC-62) and BUMP (BRC-74) can be parsed/serialized with `Beef` and
-`Bump`; `Bump.computeRoot()` verifies inclusion proofs. SPV header lookup is
-left to the caller (`ChainTracker`-style service).
+`Bump`. `Bump.computeRoot()` verifies inclusion proofs; header lookup is left
+to the caller (`ChainTracker`-style service):
+
+```js
+import { Beef } from 'bsv2'
+
+const beef = Beef.fromHex(beefHex)
+const anchored = beef.transactions.find(entry => entry.bumpIndex !== undefined)
+const merkleRoot = beef.bumps[anchored.bumpIndex].computeRoot(anchored.tx.id())
+```
+
+`beef.topologicalOrder()` returns the transactions oldest first.
 
 ## Known differences from the C++ reference
 

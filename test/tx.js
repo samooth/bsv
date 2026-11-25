@@ -500,7 +500,7 @@ describe('Tx', function () {
       }
       // These pre-Chronicle vectors use random high bits in hashType. A set
       // 0x20 bit now selects OTDA, so their BIP143 expectations no longer
-      // describe consensus behaviour. Chronicle vectors below cover OTDA.
+      // describe consensus behavior. Chronicle vectors below cover OTDA.
       if (vector[3] & Sig.SIGHASH_CHRONICLE) {
         return
       }

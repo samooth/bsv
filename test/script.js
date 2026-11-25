@@ -879,7 +879,7 @@ describe('Script', function () {
   })
 
   describe('#findAndDelete', function () {
-    it('should find and deconste this buffer', function () {
+    it('should find and delete this buffer', function () {
       new Script()
         .writeString('OP_RETURN 2 0xf0f0')
         .findAndDelete(new Script().writeString('2 0xf0f0'))

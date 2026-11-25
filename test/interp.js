@@ -357,7 +357,7 @@ describe('Interp', function () {
       verified.should.equal(true)
     })
 
-    it('should verify this new pay-to-pubKey script', function () {
+    it('should verify this new pay-to-public-key script', function () {
       const keyPair = new KeyPair().fromRandom()
       const scriptPubKey = new Script()
         .writeBuffer(keyPair.pubKey.toDer(true))
@@ -393,7 +393,7 @@ describe('Interp', function () {
       verified.should.equal(true)
     })
 
-    it('should verify this pay-to-pubKey script from script_valid.json', function () {
+    it('should verify this pay-to-public-key script from script_valid.json', function () {
       const scriptSig = new Script().fromBitcoindString(
         '0x47 0x3044022007415aa37ce7eaa6146001ac8bdefca0ddcba0e37c5dc08c4ac99392124ebac802207d382307fd53f65778b07b9c63b6e196edeadf0be719130c5db21ff1e700d67501'
       )
