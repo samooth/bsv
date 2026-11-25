@@ -1,7 +1,7 @@
 {
   "name": "bsv2",
   "description": "Javascript library for Bitcoin SV (BSV).",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "author": "Tomás Díaz",
   "homepage": "https://github.com/samooth/bsv",
   "packageManager": "yarn@1.22.22",
