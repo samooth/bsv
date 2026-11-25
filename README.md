@@ -18,7 +18,7 @@ of the `bsv` 2.x codebase: same class-based API, published on npm as
   pre-Genesis and Chronicle policy modes.
 - Keys, addresses, BIP32 hierarchical deterministic wallets and BIP39 mnemonics
   (English, Spanish and Japanese wordlists).
-- Block and block-header serialization, plus mining utilities.
+- Block and block-header serialization, mining utilities, and BEEF/BUMP SPV proofs.
 - ECIES and AES encryption helpers.
 - Web Worker support for cryptography-heavy operations.
 - Dependency-light, auditable source under `lib/`.
@@ -193,7 +193,7 @@ All symbols below are exported from the package root (`entry.js`).
 | Cryptography and math | `Bn`, `Point`, `Ecdsa`, `Hash`, `Random`, `Aes`, `Aescbc`, `Cbc`, `Ecies`, `Ach` |
 | Serialization / utilities | `Struct`, `Br`, `Bw`, `Bsm`, `VarInt`, `Base58`, `Base58Check`, `cmp`, `Constants` |
 | Workers | `Workers`, `WorkersResult` |
-| BRC helpers | `P2PKH`, `RPuzzle`, `PushDrop`, `AesGcm`, `SafeRecord`, `Reader`, `Writer` |
+| BRC helpers | `P2PKH`, `RPuzzle`, `PushDrop`, `AesGcm`, `SafeRecord`, `Reader`, `Writer`, `Beef`, `Bump` |
 | Fees and sizing | `FeeModel`, `SatoshisPerKilobyte`, `varUintSize`, `transactionInputSize`, `transactionOutputSize`, `transactionSize` |
 | Package | `deps`, `version` |
 
@@ -276,7 +276,9 @@ See [BRC-100](https://bsv.brc.dev/wallet/0100.md) for the normative interface.
 - `Reader`/`Writer` are bounds-checked byte helpers with canonical varint
   decoding; `SafeRecord` rejects prototype-polluting keys in untrusted JSON.
 
-BEEF (BRC-62) and BUMP (BRC-74) are not yet implemented.
+BEEF (BRC-62) and BUMP (BRC-74) can be parsed/serialized with `Beef` and
+`Bump`; `Bump.computeRoot()` verifies inclusion proofs. SPV header lookup is
+left to the caller (`ChainTracker`-style service).
 
 ## Known differences from the C++ reference
 
