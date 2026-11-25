@@ -1,8 +1,10 @@
 'use strict'
 import { Br } from '../lib/br'
+import { Tx } from '../lib/tx'
+import { Script } from '../lib/script'
+import { Bn } from '../lib/bn'
 import { Bw } from '../lib/bw'
 import should from 'should'
-import { Bn } from '../lib/bn'
 
 describe('Br', function () {
   it('should make a new Br', function () {
@@ -347,6 +349,38 @@ describe('Br', function () {
         .readVarIntBn()
         .toNumber()
         .should.equal(Math.pow(2, 64))
+    })
+  })
+
+  describe('#readVarIntNumStrict', function () {
+    it('should reject non-canonical encodings', function () {
+      ;(function () {
+        new Br(Buffer.from('fd0100', 'hex')).readVarIntNumStrict()
+      }.should.throw('non-canonical varInt'))
+      ;(function () {
+        new Br(Buffer.from('fe01000000', 'hex')).readVarIntNumStrict()
+      }.should.throw('non-canonical varInt'))
+    })
+
+    it('should accept canonical encodings', function () {
+      new Br(Buffer.from('fdffff', 'hex')).readVarIntNumStrict().should.equal(0xffff)
+      new Br(Buffer.from('fe00000100', 'hex')).readVarIntNumStrict().should.equal(0x10000)
+      new Br(Buffer.from('ffffffffffffffffff', 'hex')).readVarIntNumStrict().should.equal(-1)
+    })
+
+    it('should be used by Tx.fromBuffer in strict mode', function () {
+      const tx = new Tx()
+        .addTxIn(Buffer.alloc(32), 0, new Script(), 0xffffffff)
+        .addTxOut(new Bn(1), new Script())
+      const raw = tx.toBuffer()
+      const nonCanonical = Buffer.concat([
+        raw.slice(0, 4),
+        Buffer.from('fd0100', 'hex'),
+        raw.slice(5)
+      ])
+      ;(function () {
+        Tx.fromBuffer(nonCanonical, true)
+      }.should.throw('non-canonical varInt'))
     })
   })
 })

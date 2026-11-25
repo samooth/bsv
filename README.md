@@ -193,6 +193,8 @@ All symbols below are exported from the package root (`entry.js`).
 | Cryptography and math | `Bn`, `Point`, `Ecdsa`, `Hash`, `Random`, `Aes`, `Aescbc`, `Cbc`, `Ecies`, `Ach` |
 | Serialization / utilities | `Struct`, `Br`, `Bw`, `Bsm`, `VarInt`, `Base58`, `Base58Check`, `cmp`, `Constants` |
 | Workers | `Workers`, `WorkersResult` |
+| BRC helpers | `P2PKH`, `RPuzzle`, `PushDrop`, `AesGcm`, `SafeRecord`, `Reader`, `Writer` |
+| Fees and sizing | `FeeModel`, `SatoshisPerKilobyte`, `varUintSize`, `transactionInputSize`, `transactionOutputSize`, `transactionSize` |
 | Package | `deps`, `version` |
 
 Additional modules under `lib/` (for example `Msg`, `Version`, `Merkle` and
@@ -262,6 +264,19 @@ For BRC-100 integrations use the BSV Association reference implementations in
   (`WalletSigner`, baskets, BEEF, BKDS key derivation).
 
 See [BRC-100](https://bsv.brc.dev/wallet/0100.md) for the normative interface.
+
+## BRC helpers
+
+- `P2PKH`, `RPuzzle` and `PushDrop` build locking/unlocking scripts from
+  BRC-16, BRC-17 and BRC-48.
+- `AesGcm` implements AES-256-GCM with BRC-2 framing
+  (`IV || ciphertext || tag`, with a 32-byte IV).
+- `SatoshisPerKilobyte` computes a fee from the exact serialized size; the
+  `transactionSize` helpers can estimate it before signing.
+- `Reader`/`Writer` are bounds-checked byte helpers with canonical varint
+  decoding; `SafeRecord` rejects prototype-polluting keys in untrusted JSON.
+
+BEEF (BRC-62) and BUMP (BRC-74) are not yet implemented.
 
 ## Known differences from the C++ reference
 
