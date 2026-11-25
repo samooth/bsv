@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Bn } from '../lib/bn'
 import should from 'should'

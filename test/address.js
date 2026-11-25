@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Address } from '../lib/address'
 import { Constants } from '../lib/constants'

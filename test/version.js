@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Version } from '../lib/version'
 import { Bn } from '../lib/bn'

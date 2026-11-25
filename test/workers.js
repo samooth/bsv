@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Bip32 } from '../lib/bip-32'
 import { Ecies } from '../lib/ecies'
@@ -36,7 +35,7 @@ describe('Workers', function () {
     const toPubKey = toKeyPair.pubKey
     const toPrivKey = toKeyPair.privKey
     const encBuf = await Ecies.asyncBitcoreEncrypt(messageBuf, toPubKey, fromKeyPair)
-    await Promise.all([
+    const decrypted = await Promise.all([
       Ecies.asyncBitcoreDecrypt(encBuf, toPrivKey),
       Ecies.asyncBitcoreDecrypt(encBuf, toPrivKey),
       Ecies.asyncBitcoreDecrypt(encBuf, toPrivKey),
@@ -53,6 +52,9 @@ describe('Workers', function () {
       Ecies.asyncBitcoreDecrypt(encBuf, toPrivKey),
       Ecies.asyncBitcoreDecrypt(encBuf, toPrivKey)
     ])
+    decrypted.forEach(function (buf) {
+      Buffer.compare(buf, messageBuf).should.equal(0)
+    })
   })
 
   describe('#asyncObjectMethod', function () {

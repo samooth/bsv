@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import should from 'should'
 import { TxOutMap } from '../lib/tx-out-map'

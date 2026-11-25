@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Merkle } from '../lib/merkle'
 import should from 'should'

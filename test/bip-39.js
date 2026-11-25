@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Address } from '../lib/address'
 import { Bip32 } from '../lib/bip-32'
@@ -68,6 +67,18 @@ describe('Bip39', { timeout: 5000 }, function () {
       .fromString(mnemonic)
       .check()
       .should.equal(false)
+  })
+
+  it('should return false instead of throwing for invalid word counts', function () {
+    const words = new Bip39().fromRandom(128).toString().split(' ')
+    new Bip39(words.slice(0, 11).join(' ')).check().should.equal(false)
+    new Bip39(words.join(' ') + ' abandon').check().should.equal(false)
+  })
+
+  it('should reject unsupported entropy sizes', function () {
+    ;(function () {
+      Bip39.fromRandom(288)
+    }.should.throw('bits must be at most 256'))
   })
 
   describe('#toFastBuffer', function () {

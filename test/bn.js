@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import should from 'should'
 import assert from 'assert'
@@ -419,11 +418,11 @@ describe('Bn', function () {
       new Bn()
         .fromHex('01')
         .toBits()
-        .should.equal(0x01000001)
+        .should.equal(0x01010000)
       new Bn()
         .fromHex('0101')
         .toBits()
-        .should.equal(0x02000101)
+        .should.equal(0x02010100)
       new Bn()
         .fromHex('010101')
         .toBits()
@@ -443,7 +442,11 @@ describe('Bn', function () {
       new Bn()
         .fromNumber(-1)
         .toBits()
-        .should.equal(0x01800001)
+        .should.equal(0x01810000)
+      new Bn()
+        .fromBits(new Bn(1).toBits())
+        .toString()
+        .should.equal('1')
     })
   })
 

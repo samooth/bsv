@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import 'should'
 import { Hash } from '../lib/hash'

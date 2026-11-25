@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import should from 'should'
 import { Base58Check } from '../lib/base-58-check'

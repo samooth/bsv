@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Bn } from '../lib/bn'
 import { Br } from '../lib/br'
@@ -421,6 +420,40 @@ describe('Tx', function () {
         tx.sort()
         getIndexOrder(txOuts, tx.txOuts).toString().should.equal(outputSet.expected.toString())
       })
+    })
+  })
+
+  describe('sighash edge cases', function () {
+    it('should return the uint256 one hash for an out-of-range input', function () {
+      const tx = new Tx()
+        .addTxIn(Buffer.alloc(32), 0, new Script(), 0xffffffff)
+        .addTxOut(new Bn(1), new Script())
+      for (const nHashType of [
+        Sig.SIGHASH_ALL,
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID,
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID | Sig.SIGHASH_CHRONICLE
+      ]) {
+        tx.sighash(nHashType, 5, new Script(), new Bn(0))
+          .toString('hex')
+          .should.equal(
+            '0000000000000000000000000000000000000000000000000000000000000001'
+          )
+      }
+    })
+
+    it('should use the same digest algorithm in sync and async sighash', async function () {
+      const tx = new Tx()
+        .addTxIn(Buffer.alloc(32), 0, new Script(), 0xffffffff)
+        .addTxOut(new Bn(1), new Script())
+      const args = [
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID,
+        0,
+        new Script(),
+        new Bn(0)
+      ]
+      tx.sighash(...args).toString('hex').should.equal(
+        (await tx.asyncSighash(...args)).toString('hex')
+      )
     })
   })
 

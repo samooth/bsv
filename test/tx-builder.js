@@ -1,4 +1,3 @@
-/* global describe,it,before */
 'use strict'
 import { Address } from '../lib/address'
 import { Bn } from '../lib/bn'

@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import should from 'should'
 import { Interp } from '../lib/interp'
@@ -214,9 +213,81 @@ describe('Interp', function () {
     it('should has correct stack size after verify', function () {
       const interp = new Interp()
       const script = Script.fromAsmString('OP_1')
-      interp.script = script
-      interp.verify()
+      interp.verify(
+        script,
+        new Script(),
+        new Tx(),
+        0,
+        Interp.SCRIPT_VERIFY_NONE,
+        new Bn(0)
+      )
       should.equal(interp.stack.length, 1)
+    })
+
+    it('should not leak state between verifications on the same instance', function () {
+      const interp = new Interp()
+      interp
+        .verify(
+          new Script().writeString('OP_1'),
+          new Script().writeString('OP_1'),
+          new Tx(),
+          0,
+          Interp.SCRIPT_VERIFY_NONE,
+          new Bn(0)
+        )
+        .should.equal(true)
+      interp
+        .verify(
+          new Script(),
+          new Script(),
+          new Tx(),
+          0,
+          Interp.SCRIPT_VERIFY_NONE,
+          new Bn(0)
+        )
+        .should.equal(false)
+    })
+
+    it('should enforce STRICTENC even when LOW_S is also set', function () {
+      const keyPair = new KeyPair().fromRandom()
+      const scriptPubKey = new Script()
+        .writeBuffer(keyPair.pubKey.toDer(true))
+        .writeString('OP_CHECKSIG')
+      const valueBn = new Bn(1000)
+      const funding = new Tx()
+        .addTxIn(Buffer.alloc(32), 0xffffffff, new Script(), 0xffffffff)
+        .addTxOut(valueBn, scriptPubKey)
+      const spend = new Tx()
+        .addTxIn(funding.hash(), 0, new Script(), 0xffffffff)
+        .addTxOut(new Bn(900), scriptPubKey)
+      const sig = spend.sign(
+        keyPair,
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID,
+        0,
+        scriptPubKey,
+        valueBn
+      )
+      const badHashType = new Sig().fromObject({
+        r: sig.r,
+        s: sig.s,
+        nHashType: 0x04 // undefined base sighash type
+      })
+      const scriptSig = new Script().writeBuffer(badHashType.toTxFormat())
+      spend.txIns[0].setScript(scriptSig)
+      const interp = new Interp()
+      interp
+        .verify(
+          scriptSig,
+          scriptPubKey,
+          spend,
+          0,
+          Interp.SCRIPT_VERIFY_LOW_S |
+            Interp.SCRIPT_VERIFY_STRICTENC |
+            Interp.SCRIPT_ENABLE_SIGHASH_FORKID,
+          valueBn
+        )
+        .should.equal(false)
+      interp.errStr.should.equal('SCRIPT_ERR_SIG_HASHTYPE')
     })
 
     it('should verify or unverify these trivial scripts from script_valid.json', function () {
@@ -308,7 +379,12 @@ describe('Interp', function () {
       spendtx.addTxIn(idbuf, 0, new Script(), 0xffffffff)
       spendtx.addTxOut(new Bn(0), new Script())
 
-      const sig = spendtx.sign(keyPair, Sig.SIGHASH_ALL, 0, scriptPubKey)
+      const sig = spendtx.sign(
+        keyPair,
+        Sig.SIGHASH_ALL | Sig.SIGHASH_FORKID,
+        0,
+        scriptPubKey
+      )
       const scriptSig = new Script().writeBuffer(sig.toTxFormat())
       spendtx.txIns[0].setScript(scriptSig)
 
@@ -526,6 +602,66 @@ describe('Interp', function () {
         verified.should.equal(false)
       })
     })
+
+  describe('interpreter audit fixes', function () {
+    it('should parse PREGENESIS_LIMITS from a flag string', function () {
+      Interp.getFlags('PREGENESIS_LIMITS').should.equal(
+        Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS
+      )
+    })
+
+    it('should reject a second OP_ELSE under Chronicle only', function () {
+      const script = new Script().fromBuffer(
+        Buffer.from([0x51, 0x63, 0x67, 0x67, 0x68, 0x51])
+      )
+      new Interp()
+        .verify(script, new Script(), new Tx(), 0, 0, new Bn(0))
+        .should.equal(true)
+      new Interp()
+        .verify(
+          script,
+          new Script(),
+          new Tx(),
+          0,
+          Interp.SCRIPT_VERIFY_CHRONICLE,
+          new Bn(0)
+        )
+        .should.equal(false)
+    })
+
+    it('should treat VERIF in an unexecuted branch as a NOP outside Chronicle', function () {
+      const script = new Script().fromBuffer(
+        Buffer.from([0x00, 0x63, 0x65, 0x68, 0x68, 0x51])
+      )
+      new Interp()
+        .verify(script, new Script(), new Tx(), 0, 0, new Bn(0))
+        .should.equal(true)
+    })
+
+    it('should stop eval after the first failed opcode', function () {
+      const interp = new Interp()
+      interp.fromObject({
+        script: new Script().fromBuffer(Buffer.from([0x6a, 0x51])),
+        flags: 0
+      })
+      interp.setLimits()
+      const results = Array.from(interp.eval())
+      results[results.length - 1].should.equal(false)
+    })
+
+    it('should bound large numeric shifts', function () {
+      const flags =
+        Interp.SCRIPT_VERIFY_CHRONICLE |
+        Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS
+      const pub = new Script()
+        .writeString('OP_1')
+        .writeBuffer(Buffer.from([100]))
+        .writeOpCode(0xb6)
+      const interp = new Interp()
+      interp.verify(new Script(), pub, new Tx(), 0, flags, new Bn(0)).should.equal(false)
+      interp.errStr.should.equal('SCRIPTNUM_OVERFLOW')
+    })
+  })
 
   describe('pre-genesis limits flag', function () {
     const PRE = Interp.SCRIPT_VERIFY_PREGENESIS_LIMITS
@@ -766,14 +902,10 @@ describe('Interp', function () {
     it('should preserve sign in numeric shifts', function () {
       // -1 << 1 == -2
       run([], [0x4f, 0x51, 0xb6, 0x52, 0x8f, 0x9c], flags).should.equal(true)
-      // -1 >> 1 == -1
-      run([], [0x4f, 0x51, 0xb7, 0x4f, 0x9c], flags).should.equal(true)
-      // -3 >> 1 == -2 (rounds toward negative infinity)
-      run(
-        [],
-        [0x53, 0x8f, 0x51, 0xb7, 0x52, 0x8f, 0x9c],
-        flags
-      ).should.equal(true)
+      // -1 >> 1 == 0 (rounds toward zero)
+      run([], [0x4f, 0x51, 0xb7, 0x00, 0x9c], flags).should.equal(true)
+      // -3 >> 1 == -1
+      run([], [0x53, 0x8f, 0x51, 0xb7, 0x4f, 0x9c], flags).should.equal(true)
     })
 
     it('should accept high-S signatures under Chronicle only', function () {
@@ -1012,6 +1144,29 @@ describe('Interp', function () {
           new Bn(0)
         )
         .should.equal(false)
+      chronicle.errStr.should.not.equal('SCRIPT_ERR_SIG_NULLFAIL')
+    })
+
+    it('should apply NULLFAIL to every signature in a failed multisig', function () {
+      const kp1 = new KeyPair().fromRandom()
+      const kp2 = new KeyPair().fromRandom()
+      const scriptPubKey = new Script()
+        .writeString('OP_2')
+        .writeBuffer(kp1.pubKey.toDer(true))
+        .writeBuffer(kp2.pubKey.toDer(true))
+        .writeString('OP_2 OP_CHECKMULTISIG')
+      const scriptSig = new Script()
+        .writeString('OP_0')
+        .writeBuffer(Buffer.from('30', 'hex'))
+        .writeBuffer(Buffer.from('30', 'hex'))
+      const flags =
+        Interp.SCRIPT_VERIFY_NULLFAIL | Interp.SCRIPT_ENABLE_SIGHASH_FORKID
+      const interp = new Interp()
+      interp.verify(scriptSig, scriptPubKey, new Tx(), 0, flags, new Bn(0)).should.equal(false)
+      interp.errStr.should.equal('SCRIPT_ERR_SIG_NULLFAIL')
+
+      const chronicle = new Interp()
+      chronicle.verify(scriptSig, scriptPubKey, new Tx(), 0, flags | CHRONICLE, new Bn(0)).should.equal(false)
       chronicle.errStr.should.not.equal('SCRIPT_ERR_SIG_NULLFAIL')
     })
 

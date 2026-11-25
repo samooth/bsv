@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import should from 'should'
 import { SigOperations } from '../lib/sig-operations'

@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Ecies } from '../lib/ecies'
 import should from 'should'

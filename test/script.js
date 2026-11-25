@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Bn } from '../lib/bn'
 import { OpCode } from '../lib/op-code'
@@ -846,6 +845,39 @@ describe('Script', function () {
     })
   })
 
+  describe('audit fixes', function () {
+    it('should detect a partially signed P2PKH input', function () {
+      const sig = new Script().writeBuffer(Buffer.from('30', 'hex'))
+      new Script().writeBuffer(sig.chunks[0].buf).writeString('OP_0')
+        .isPubKeyHashIn().should.equal(true)
+    })
+
+    it('should copy buffers passed to writeBuffer', function () {
+      const buf = Buffer.from('0102', 'hex')
+      const script = new Script().writeBuffer(buf)
+      buf[0] = 0xff
+      script.toBuffer().toString('hex').should.equal('020102')
+    })
+
+    it('should compare equal public keys as equal', function () {
+      const pubKey = new PubKey().fromDer(
+        Buffer.from(
+          '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798',
+          'hex'
+        )
+      )
+      const sorted = Script.sortPubKeys([pubKey, pubKey.clone ? pubKey.clone() : pubKey])
+      sorted.length.should.equal(2)
+    })
+
+    it('should return false for malformed predicate inputs', function () {
+      new Script().isNonSpendable().should.equal(false)
+      new Script().isMultiSigOut().should.equal(false)
+      new Script().isMultiSigIn().should.equal(false)
+      new Script().isScriptHashIn().should.equal(false)
+    })
+  })
+
   describe('#findAndDelete', function () {
     it('should find and deconste this buffer', function () {
       new Script()
@@ -853,6 +885,23 @@ describe('Script', function () {
         .findAndDelete(new Script().writeString('2 0xf0f0'))
         .toString()
         .should.equal('OP_RETURN')
+    })
+
+    it('should remove all consecutive matches', function () {
+      const target = new Script().writeBuffer(Buffer.from('aabb', 'hex'))
+      const script = new Script()
+        .writeBuffer(Buffer.from('aabb', 'hex'))
+        .writeBuffer(Buffer.from('aabb', 'hex'))
+        .writeString('OP_CHECKSIG')
+      script.findAndDelete(target).toBuffer().toString('hex').should.equal('ac')
+    })
+
+    it('should ignore an empty script', function () {
+      new Script()
+        .writeString('OP_0 OP_1 OP_CHECKSIG')
+        .findAndDelete(new Script())
+        .toString()
+        .should.equal('OP_0 OP_1 OP_CHECKSIG')
     })
   })
 
@@ -1195,9 +1244,8 @@ describe('Script', function () {
       should(script.isOpReturn()).be.false()
     })
 
-    it('throws for empty script', () => {
-      const script = new Script()
-      should(() => script.isOpReturn()).throw()
+    it('returns false for empty script', () => {
+      new Script().isOpReturn().should.equal(false)
     })
 
     it('returns false for only push data script', () => {

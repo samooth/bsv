@@ -7,3 +7,10 @@ package-lock.json
 .vscode
 
 dist
+doc/
+out/
+mtest/
+test-results/
+pnpm-lock.yaml
+*.tgz
+coverage/

@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Aes } from '../lib/aes'
 import { Cbc } from '../lib/cbc'

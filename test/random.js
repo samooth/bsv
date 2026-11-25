@@ -1,4 +1,3 @@
-/* global describe,it */
 import { Random } from '../lib/random'
 import 'should'
 

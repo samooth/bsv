@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { BlockHeader } from '../lib/block-header'
 import { Bw } from '../lib/bw'

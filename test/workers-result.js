@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { WorkersResult } from '../lib/workers-result'
 import { cmp } from '../lib/cmp'

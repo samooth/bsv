@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Bip32 } from '../lib/bip-32'
 import { Base58Check } from '../lib/base-58-check'

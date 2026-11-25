@@ -263,6 +263,20 @@ For BRC-100 integrations use the BSV Association reference implementations in
 
 See [BRC-100](https://bsv.brc.dev/wallet/0100.md) for the normative interface.
 
+## Known differences from the C++ reference
+
+- Activation is expressed with `SCRIPT_VERIFY_CHRONICLE` or a transaction
+  version above 1; the library has no block height, so policy is not tied to a
+  chain height.
+- Pre-Genesis rules are selected explicitly with `SCRIPT_VERIFY_PREGENESIS_LIMITS`;
+  outside Chronicle some legacy policy differences (for example multiple
+  `OP_ELSE`) are permitted because older reference vectors rely on them.
+- `Sig.toTxFormat()` serializes the hash type as one byte, as required inside
+  scripts; C++ `SigHashType` also supports a 32-bit form with a fork value.
+- `Bip39` buffer serialization stores the mnemonic and seed but not the
+  wordlist; re-create non-English mnemonics with `Bip39Jp`/`Bip39Es` after a
+  binary round-trip.
+
 ## Security
 
 Please report security issues privately through the repository's security

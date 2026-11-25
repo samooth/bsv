@@ -12,8 +12,10 @@
   "exports": {
     ".": {
       "import": "./dist/bsv2.mjs",
-      "require": "./dist/bsv2.cjs"
-    }
+      "require": "./dist/bsv2.cjs",
+      "default": "./dist/bsv2.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "./dist/bsv2.mjs",

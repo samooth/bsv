@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Inv } from '../lib/inv'
 import { Hash } from '../lib/hash'

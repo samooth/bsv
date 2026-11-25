@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { KeyPair } from '../lib/key-pair'
 import { PrivKey } from '../lib/priv-key'

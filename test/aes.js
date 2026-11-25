@@ -1,4 +1,3 @@
-/* global describe,it */
 import should from 'should'
 import { Hash } from '../lib/hash'
 import { Aes } from '../lib/aes'

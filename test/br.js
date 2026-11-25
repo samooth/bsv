@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Br } from '../lib/br'
 import { Bw } from '../lib/bw'

@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Address } from '../lib/address'
 import { Bsm } from '../lib/bsm'
@@ -90,11 +89,11 @@ describe('Bsm', function () {
     })
 
     it('should verify this known good signature', function () {
-      const addrstr = '1CKTmxj6DjGrGTfbZzVxnY4Besbv8oxSZb'
+      const addrstr = '1BgGZ9tcN4rm9KBzDn7KprQz87SZ26SAMH'
       const address = new Address().fromString(addrstr)
       const sigstr =
-        'IOrTlbNBI0QO990xOw4HAjnvRl/1zR+oBMS6HOjJgfJqXp/1EnFrcJly0UcNelqJNIAH4f0abxOZiSpYmenMH4M='
-      Bsm.verify(messageBuf, sigstr, address)
+        'IEi5pWIHaEgjFK+0/VwWvCLiMC4qp1PrgNR9vJnvpAuQYd5WBjJ98PqGhel7Ak5Ob6CADlR0jJ9QJv/UgJUDIhA='
+      Bsm.verify(messageBuf, sigstr, address).should.equal(true)
     })
   })
 

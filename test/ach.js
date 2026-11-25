@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { Ach } from '../lib/ach'
 import should from 'should'

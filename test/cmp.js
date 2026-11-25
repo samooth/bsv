@@ -1,4 +1,3 @@
-/* global describe,it */
 'use strict'
 import { cmp } from '../lib/cmp'
 import 'should'
